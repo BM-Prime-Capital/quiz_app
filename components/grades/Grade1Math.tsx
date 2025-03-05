@@ -126,7 +126,7 @@ const Grade1Math: React.FC = () => {
                   value={(answers[question.id] as string) || ""}
                   onChange={(e) => handleTextAnswerChange(question.id, e)}
                   className="w-full border-2 border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Write your answer here..."
+                  placeholder="Write your answer here ..."
                 />
               </div>
             </div>
