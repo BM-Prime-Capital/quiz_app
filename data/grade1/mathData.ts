@@ -58,14 +58,7 @@ export const grade1MathQuestions: Question[] = [
     correctAnswer: "5",
     image: "https://via.placeholder.com/300x100?text=Math+Addition+Image",
   },
-  {
-    id: 8,
-    type: "multiple-choice",
-    question: "Circle the correct amount of money",
-    options: ["2 ¢", "5 ¢", "1 ¢", "$1"],
-    correctAnswer: "5 ¢",
-    image: "https://via.placeholder.com/300x150?text=Coins+Image",
-  },
+
 ]
 
 export const grade1MathData = {
