@@ -2,18 +2,17 @@
 
 import type React from "react"
 import { useState } from "react"
-import { grade1ELAData, type Question } from "../../data/grade1/elaData"
+import { grade2ELAData, type Question } from "../../data/grade2/elaData"
 import Link from "next/link"
-import { ArrowLeft, CheckCircle } from "lucide-react"
+import { ArrowLeft, Home, CheckCircle } from "lucide-react"
 
-const Grade1ELA: React.FC = () => {
-  const quizData = grade1ELAData
+const Grade2ELA: React.FC = () => {
+  const quizData = grade2ELAData
   const [studentName, setStudentName] = useState("")
-  const [date, setDate] = useState("")
   const [answers, setAnswers] = useState<Record<number, string | string[]>>({})
   const [submitted, setSubmitted] = useState(false)
-  const [currentPassage, setCurrentPassage] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0) // 0: info, 1: questions
+  const currentDate = new Date().toLocaleDateString()
 
   // Group questions by passage
   const questionsByPassage: Record<string, Question[]> = {}
@@ -44,24 +43,12 @@ const Grade1ELA: React.FC = () => {
     }))
   }
 
-  const handleBlankAnswerChange = (questionId: number, index: number, value: string) => {
-    const currentAnswers = (answers[questionId] as string[]) || []
-    const newAnswers = [...currentAnswers]
-    newAnswers[index] = value
-
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: newAnswers,
-    }))
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Ici vous pourriez envoyer les données à votre backend
     console.log({
       studentName,
-      date,
+      date: currentDate,
       answers,
     })
 
@@ -77,16 +64,6 @@ const Grade1ELA: React.FC = () => {
               <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
-
-                {question.image && (
-                  <div className="mb-4">
-                    <img
-                      src={question.image || "/placeholder.svg"}
-                      alt={`Question ${question.id}`}
-                      className="max-w-full h-auto mb-3 max-h-48 object-contain rounded-md border border-gray-200"
-                    />
-                  </div>
-                )}
 
                 <div className="space-y-2">
                   {question.options?.map((option, index) => (
@@ -120,6 +97,7 @@ const Grade1ELA: React.FC = () => {
         )
 
       case "text":
+      case "writing":
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
@@ -127,7 +105,7 @@ const Grade1ELA: React.FC = () => {
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 <textarea
-                  rows={4}
+                  rows={question.type === "writing" ? 15 : 4}
                   value={(answers[question.id] as string) || ""}
                   onChange={(e) => handleTextAnswerChange(question.id, e)}
                   className="w-full border-2 border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -138,72 +116,8 @@ const Grade1ELA: React.FC = () => {
           </div>
         )
 
-      case "fill-in-blank":
-        return (
-          <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
-            <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
-              <div className="flex-1">
-                <p className="font-medium mb-3 text-gray-800">{question.question}</p>
-                <div className="space-y-4">
-                  {question.blanks?.map((blank, index) => (
-                    <div key={index} className="flex flex-col">
-                      <p className="mb-2 text-gray-700">{blank}</p>
-                      <input
-                        type="text"
-                        value={((answers[question.id] as string[]) || [])[index] || ""}
-                        onChange={(e) => handleBlankAnswerChange(question.id, index, e.target.value)}
-                        className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-1/2"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-
-      case "drawing":
-        return (
-          <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
-            <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
-              <div className="flex-1">
-                <p className="font-medium mb-3 text-gray-800">{question.question}</p>
-                {question.image && (
-                  <div className="mb-4">
-                    <img
-                      src={question.image || "/placeholder.svg"}
-                      alt={`Question ${question.id}`}
-                      className="max-w-full h-auto mb-3 max-h-48 object-contain rounded-md border border-gray-200"
-                    />
-                  </div>
-                )}
-                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
-                  <p className="text-yellow-700 italic">
-                    Note: For drawing questions, please draw on a separate paper or use the PDF version of this
-                    assessment.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-
       default:
-        return (
-          <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
-            <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
-              <div className="flex-1">
-                <p className="font-medium mb-3 text-gray-800">{question.question}</p>
-                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
-                  <p className="text-yellow-700 italic">This question type is not supported in the online version.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
+        return null
     }
   }
 
@@ -219,11 +133,13 @@ const Grade1ELA: React.FC = () => {
             Thank you for completing the Grade {quizData.grade} {quizData.subject.toUpperCase()} assessment. Your
             responses have been recorded.
           </p>
-          <Link href="/">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
-              Return to Home
-            </button>
-          </Link>
+          <div className="flex justify-center space-x-4">
+            <Link href="/">
+              <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+                Return to Home
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -233,14 +149,12 @@ const Grade1ELA: React.FC = () => {
     return (
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
+          <Link href="/" className="inline-block">
+            <div className="h-32 flex items-center justify-center font-bold text-2xl">
+              Radiant Prep's Testing Program
+            </div>
+          </Link>
           <h1 className="text-3xl font-bold mb-2">GRADE {quizData.grade}</h1>
-          <div className="flex justify-center">
-            <img
-              src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80"
-              alt="Radiant Prep Logo"
-              className="h-32 object-contain hover:opacity-90 transition-opacity"
-            />
-          </div>
           <h2 className="text-xl font-bold mt-4">DIAGNOSTIC ASSESSMENT</h2>
           <div className="mt-4 inline-block border-2 border-black px-8 py-2">
             <span className="text-xl font-bold">ELA</span>
@@ -249,7 +163,7 @@ const Grade1ELA: React.FC = () => {
 
         <div className="bg-white p-8 rounded-lg shadow-md mb-8">
           <h3 className="text-xl font-bold mb-4 text-gray-800">Student Information</h3>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="mb-6">
             <div className="flex-1">
               <label className="font-bold text-gray-700">Name:</label>
               <input
@@ -260,23 +174,17 @@ const Grade1ELA: React.FC = () => {
                 required
               />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 mt-4">
               <label className="font-bold text-gray-700">Date:</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full border-b-2 border-gray-400 mt-1 h-10 focus:outline-none focus:border-blue-500 px-2"
-                required
-              />
+              <p className="mt-2 text-gray-600">{currentDate}</p>
             </div>
           </div>
           <div className="flex justify-end mt-6">
             <button
               onClick={() => setCurrentStep(1)}
-              disabled={!studentName || !date}
+              disabled={!studentName}
               className={`py-2 px-6 rounded-lg font-bold transition duration-200 ${
-                !studentName || !date
+                !studentName
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
@@ -286,7 +194,11 @@ const Grade1ELA: React.FC = () => {
           </div>
         </div>
 
-        <div className="text-center">
+        <div className="flex justify-center space-x-4">
+          <Link href="/" className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center">
+            <Home size={16} className="mr-1" />
+            Home
+          </Link>
           <Link
             href={`/subject-selection/${quizData.grade}`}
             className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center"
@@ -308,8 +220,13 @@ const Grade1ELA: React.FC = () => {
               Grade {quizData.grade} - {quizData.subject.toUpperCase()}
             </h1>
             <p className="text-gray-600">
-              Student: {studentName} | Date: {date}
+              Student: {studentName} | Date: {currentDate}
             </p>
+          </div>
+          <div className="flex space-x-4">
+            <Link href="/" className="text-blue-600 hover:text-blue-800">
+              <Home size={20} />
+            </Link>
           </div>
         </div>
 
@@ -362,5 +279,5 @@ const Grade1ELA: React.FC = () => {
   )
 }
 
-export default Grade1ELA
+export default Grade2ELA
 

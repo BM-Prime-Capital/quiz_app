@@ -7,10 +7,10 @@ export default function HomePage() {
       <div className="mb-12">
         <div className="flex justify-center mb-6">
           <div className="bg-green-100 p-6 rounded-full">
-            <GraduationCap size={80} className="text-green-600" />
+            <img src="/assets/raidiant.png" alt="Radiant Logo" className="w-20 h-20" />
           </div>
         </div>
-        <h1 className="text-4xl font-bold mb-4">Welcome to Radiant Prep</h1>
+        <h1 className="text-4xl font-bold mb-4">Welcome to Radiant Prep's Testing Program</h1>
         <p className="text-xl text-gray-600 mb-8">
           Our diagnostic assessment platform helps identify strengths and areas for improvement in English Language Arts
           and Mathematics.
