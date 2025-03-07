@@ -1,5 +1,9 @@
 import Grade1ELA from "@/components/grades/Grade1ELA"
 import Grade1Math from "@/components/grades/Grade1Math"
+import Grade2ELA from "@/components/grades/Grade2ELA"
+import Grade3ELA from "@/components/grades/Grade3ELA"
+import Grade4ELA from "@/components/grades/Grade4ELA"
+import Grade5ELA from "@/components/grades/Grade5ELA"
 import Link from "next/link"
 
 export default function SubjectPage({ params }: { params: { grade: string; subject: string } }) {
@@ -12,6 +16,22 @@ export default function SubjectPage({ params }: { params: { grade: string; subje
 
   if (grade === "1" && subject === "math") {
     return <Grade1Math />
+  }
+
+  if (grade === "2" && subject === "ela") {
+    return <Grade2ELA />
+  }
+
+  if (grade === "3" && subject === "ela") {
+    return <Grade3ELA />
+  }
+
+  if (grade === "4" && subject === "ela") {
+    return <Grade4ELA />
+  }
+
+  if (grade === "5" && subject === "ela") {
+    return <Grade5ELA />
   }
 
   // For other grades and subjects, you would add more components
