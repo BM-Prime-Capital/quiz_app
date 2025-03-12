@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { grade1ELAData, type Question } from "../../data/grade1/elaData"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle } from "lucide-react"
@@ -14,6 +14,7 @@ const Grade1ELA: React.FC = () => {
   const [submitted, setSubmitted] = useState(false)
   const [currentPassage, setCurrentPassage] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0) // 0: info, 1: questions
+  const [timeElapsed, setTimeElapsed] = useState(0) // Temps écoulé en secondes
 
   // Group questions by passage
   const questionsByPassage: Record<string, Question[]> = {}
@@ -29,6 +30,29 @@ const Grade1ELA: React.FC = () => {
       questionsWithoutPassage.push(question)
     }
   })
+
+  // Démarrer le chronomètre lorsque currentStep passe à 1
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null
+
+    if (currentStep === 1) {
+      interval = setInterval(() => {
+        setTimeElapsed((prev) => prev + 1)
+      }, 1000) // 1000 ms = 1 seconde
+    }
+
+    // Nettoyer l'intervalle lorsque le composant est démonté ou lorsque l'évaluation est soumise
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [currentStep])
+
+  // Convertir le temps écoulé en secondes en format MM:SS
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+  }
 
   const handleAnswerChange = (questionId: number, answer: string) => {
     setAnswers((prev) => ({
@@ -63,6 +87,7 @@ const Grade1ELA: React.FC = () => {
       studentName,
       date,
       answers,
+      timeElapsed, // Ajouter le temps écoulé aux données soumises
     })
 
     setSubmitted(true)
@@ -194,7 +219,7 @@ const Grade1ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
@@ -311,6 +336,9 @@ const Grade1ELA: React.FC = () => {
               Student: {studentName} | Date: {date}
             </p>
           </div>
+          <div className="text-lg font-bold text-gray-700">
+            Time Elapsed: {formatTime(timeElapsed)}
+          </div>
         </div>
 
         {/* Render questions with passages */}
@@ -363,4 +391,3 @@ const Grade1ELA: React.FC = () => {
 }
 
 export default Grade1ELA
-
