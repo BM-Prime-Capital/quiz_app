@@ -1,18 +1,55 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { grade1MathData, type Question } from "../../data/grade1/mathData"
+import { useState, useEffect } from "react"
+import { grade1MathData, type Question } from "@/data/grade1/mathData"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle } from "lucide-react"
 
 const Grade1Math: React.FC = () => {
   const quizData = grade1MathData
+
+  // Utiliser localStorage pour la persistance
   const [studentName, setStudentName] = useState("")
   const [date, setDate] = useState("")
   const [answers, setAnswers] = useState<Record<number, string | string[]>>({})
-  const [submitted, setSubmitted] = useState(false)
   const [currentStep, setCurrentStep] = useState(0) // 0: info, 1: questions
+  const [submitted, setSubmitted] = useState(false)
+
+  // Charger les données depuis localStorage au montage du composant
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedName = localStorage.getItem("mathStudentName")
+      const savedDate = localStorage.getItem("mathDate")
+      const savedAnswers = localStorage.getItem("mathAnswers")
+      const savedStep = localStorage.getItem("mathCurrentStep")
+
+      if (savedName) setStudentName(savedName)
+      if (savedDate) setDate(savedDate)
+      if (savedAnswers) setAnswers(JSON.parse(savedAnswers))
+      if (savedStep) setCurrentStep(Number.parseInt(savedStep))
+    }
+  }, [])
+
+  // Sauvegarder les changements dans localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined" && studentName) {
+      localStorage.setItem("mathStudentName", studentName)
+      localStorage.setItem("mathDate", date)
+      localStorage.setItem("mathAnswers", JSON.stringify(answers))
+      localStorage.setItem("mathCurrentStep", String(currentStep))
+    }
+  }, [studentName, date, answers, currentStep])
+
+  // Nettoyer localStorage après la soumission
+  useEffect(() => {
+    if (submitted && typeof window !== "undefined") {
+      localStorage.removeItem("mathStudentName")
+      localStorage.removeItem("mathDate")
+      localStorage.removeItem("mathAnswers")
+      localStorage.removeItem("mathCurrentStep")
+    }
+  }, [submitted])
 
   const handleAnswerChange = (questionId: number, answer: string) => {
     setAnswers((prev) => ({
@@ -52,6 +89,8 @@ const Grade1Math: React.FC = () => {
     setSubmitted(true)
   }
 
+  // Remplacer la fonction renderQuestion par cette version améliorée qui permet de répondre à toutes les questions en ligne
+
   const renderQuestion = (question: Question) => {
     switch (question.type) {
       case "multiple-choice":
@@ -67,12 +106,12 @@ const Grade1Math: React.FC = () => {
                     <img
                       src={question.image || "/placeholder.svg"}
                       alt={`Question ${question.id}`}
-                      className="max-w-full h-auto mb-3 max-h-48 object-contain rounded-md border border-gray-200"
+                      className="max-w-full h-auto mb-3 object-contain"
                     />
                   </div>
                 )}
 
-                <div className="space-y-2">
+                <div className="space-y-2 mt-4">
                   {question.options?.map((option, index) => (
                     <div
                       key={index}
@@ -103,7 +142,8 @@ const Grade1Math: React.FC = () => {
           </div>
         )
 
-      case "text":
+      case "drawing":
+        // Pour les questions de dessin, on offre des options de réponse
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
@@ -116,22 +156,440 @@ const Grade1Math: React.FC = () => {
                     <img
                       src={question.image || "/placeholder.svg"}
                       alt={`Question ${question.id}`}
-                      className="max-w-full h-auto mb-3 max-h-48 object-contain rounded-md border border-gray-200"
+                      className="max-w-full h-auto mb-3 object-contain"
                     />
                   </div>
                 )}
 
-                <textarea
-                  rows={4}
-                  value={(answers[question.id] as string) || ""}
-                  onChange={(e) => handleTextAnswerChange(question.id, e)}
-                  className="w-full border-2 border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Write your answer here ..."
-                />
+                {/* Interface interactive pour les questions de dessin */}
+                <div className="mt-4">
+                  {question.id === 1 && (
+                    <div className="space-y-3">
+                      <p className="text-gray-700">Sélectionnez l'objet qui est différent dans chaque groupe:</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="border p-3 rounded-md hover:bg-gray-50 cursor-pointer">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="q1-different"
+                              value="briefcase1"
+                              checked={(answers[question.id] as string) === "briefcase1"}
+                              onChange={() => handleAnswerChange(question.id, "briefcase1")}
+                              className="mr-2"
+                            />
+                            <span>Premier objet</span>
+                          </label>
+                        </div>
+                        <div className="border p-3 rounded-md hover:bg-gray-50 cursor-pointer">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="q1-different"
+                              value="briefcase2"
+                              checked={(answers[question.id] as string) === "briefcase2"}
+                              onChange={() => handleAnswerChange(question.id, "briefcase2")}
+                              className="mr-2"
+                            />
+                            <span>Deuxième objet</span>
+                          </label>
+                        </div>
+                        <div className="border p-3 rounded-md hover:bg-gray-50 cursor-pointer">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="q1-different"
+                              value="briefcase3"
+                              checked={(answers[question.id] as string) === "briefcase3"}
+                              onChange={() => handleAnswerChange(question.id, "briefcase3")}
+                              className="mr-2"
+                            />
+                            <span>Troisième objet</span>
+                          </label>
+                        </div>
+                        <div className="border p-3 rounded-md hover:bg-gray-50 cursor-pointer">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="q1-different"
+                              value="briefcase4"
+                              checked={(answers[question.id] as string) === "briefcase4"}
+                              onChange={() => handleAnswerChange(question.id, "briefcase4")}
+                              className="mr-2"
+                            />
+                            <span>Quatrième objet</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {question.id === 3 && (
+                    <div className="space-y-3">
+                      <p className="text-gray-700">Quelle forme vient ensuite dans le motif?</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="border p-3 rounded-md hover:bg-gray-50 cursor-pointer">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="q3-pattern"
+                              value="circle"
+                              checked={(answers[question.id] as string) === "circle"}
+                              onChange={() => handleAnswerChange(question.id, "circle")}
+                              className="mr-2"
+                            />
+                            <span>Cercle</span>
+                          </label>
+                        </div>
+                        <div className="border p-3 rounded-md hover:bg-gray-50 cursor-pointer">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="q3-pattern"
+                              value="square"
+                              checked={(answers[question.id] as string) === "square"}
+                              onChange={() => handleAnswerChange(question.id, "square")}
+                              className="mr-2"
+                            />
+                            <span>Carré</span>
+                          </label>
+                        </div>
+                        <div className="border p-3 rounded-md hover:bg-gray-50 cursor-pointer">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="q3-pattern"
+                              value="triangle"
+                              checked={(answers[question.id] as string) === "triangle"}
+                              onChange={() => handleAnswerChange(question.id, "triangle")}
+                              className="mr-2"
+                            />
+                            <span>Triangle</span>
+                          </label>
+                        </div>
+                        <div className="border p-3 rounded-md hover:bg-gray-50 cursor-pointer">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="q3-pattern"
+                              value="diamond"
+                              checked={(answers[question.id] as string) === "diamond"}
+                              onChange={() => handleAnswerChange(question.id, "diamond")}
+                              className="mr-2"
+                            />
+                            <span>Losange</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {question.id === 6 && (
+                    <div className="space-y-3">
+                      <p className="text-gray-700">Sélectionnez le troisième élément de chaque rangée:</p>
+                      <div className="space-y-3">
+                        <div className="border p-3 rounded-md">
+                          <p className="font-medium mb-2">Première rangée (EXIT):</p>
+                          <div className="flex flex-wrap gap-2">
+                            {[1, 2, 3, 4, 5].map((num) => (
+                              <div
+                                key={`row1-${num}`}
+                                className={`border p-2 rounded cursor-pointer ${
+                                  (answers[question.id] as string)?.includes(`row1-${num}`)
+                                    ? "bg-green-100 border-green-500"
+                                    : "hover:bg-gray-50"
+                                }`}
+                                onClick={() => {
+                                  const currentVal = (answers[question.id] as string[]) || []
+                                  // Remplacer la sélection pour la rangée 1
+                                  const newVal = currentVal
+                                    .filter((v) => !v.startsWith("row1-"))
+                                    .concat([`row1-${num}`])
+                                  setAnswers((prev) => ({ ...prev, [question.id]: newVal }))
+                                }}
+                              >
+                                Élément {num}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="border p-3 rounded-md">
+                          <p className="font-medium mb-2">Deuxième rangée (tasses):</p>
+                          <div className="flex flex-wrap gap-2">
+                            {[1, 2, 3].map((num) => (
+                              <div
+                                key={`row2-${num}`}
+                                className={`border p-2 rounded cursor-pointer ${
+                                  (answers[question.id] as string[])?.includes(`row2-${num}`)
+                                    ? "bg-green-100 border-green-500"
+                                    : "hover:bg-gray-50"
+                                }`}
+                                onClick={() => {
+                                  const currentVal = (answers[question.id] as string[]) || []
+                                  // Remplacer la sélection pour la rangée 2
+                                  const newVal = currentVal
+                                    .filter((v) => !v.startsWith("row2-"))
+                                    .concat([`row2-${num}`])
+                                  setAnswers((prev) => ({ ...prev, [question.id]: newVal }))
+                                }}
+                              >
+                                Élément {num}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="border p-3 rounded-md">
+                          <p className="font-medium mb-2">Troisième rangée (chapeaux):</p>
+                          <div className="flex flex-wrap gap-2">
+                            {[1, 2, 3, 4].map((num) => (
+                              <div
+                                key={`row3-${num}`}
+                                className={`border p-2 rounded cursor-pointer ${
+                                  (answers[question.id] as string[])?.includes(`row3-${num}`)
+                                    ? "bg-green-100 border-green-500"
+                                    : "hover:bg-gray-50"
+                                }`}
+                                onClick={() => {
+                                  const currentVal = (answers[question.id] as string[]) || []
+                                  // Remplacer la sélection pour la rangée 3
+                                  const newVal = currentVal
+                                    .filter((v) => !v.startsWith("row3-"))
+                                    .concat([`row3-${num}`])
+                                  setAnswers((prev) => ({ ...prev, [question.id]: newVal }))
+                                }}
+                              >
+                                Élément {num}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {question.id === 13 && (
+                    <div className="space-y-3">
+                      <p className="text-gray-700">
+                        Combien de cercles faut-il dessiner pour représenter l'équation 6 + 0 = 6?
+                      </p>
+                      <input
+                        type="number"
+                        min="0"
+                        max="20"
+                        value={(answers[question.id] as string) || ""}
+                        onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                        className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-20 text-center font-mono text-lg"
+                        placeholder="Nombre"
+                      />
+                    </div>
+                  )}
+
+                  {question.id === 22 && (
+                    <div className="space-y-3">
+                      <p className="text-gray-700">Sélectionnez les pièces nécessaires pour acheter un objet à 35¢:</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="q22-penny"
+                            checked={(answers[question.id] as string[])?.includes("penny")}
+                            onChange={(e) => {
+                              const currentVal = (answers[question.id] as string[]) || []
+                              if (e.target.checked) {
+                                setAnswers((prev) => ({ ...prev, [question.id]: [...currentVal, "penny"] }))
+                              } else {
+                                setAnswers((prev) => ({
+                                  ...prev,
+                                  [question.id]: currentVal.filter((v) => v !== "penny"),
+                                }))
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <label htmlFor="q22-penny">Penny (1¢)</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="q22-nickel"
+                            checked={(answers[question.id] as string[])?.includes("nickel")}
+                            onChange={(e) => {
+                              const currentVal = (answers[question.id] as string[]) || []
+                              if (e.target.checked) {
+                                setAnswers((prev) => ({ ...prev, [question.id]: [...currentVal, "nickel"] }))
+                              } else {
+                                setAnswers((prev) => ({
+                                  ...prev,
+                                  [question.id]: currentVal.filter((v) => v !== "nickel"),
+                                }))
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <label htmlFor="q22-nickel">Nickel (5¢)</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="q22-dime"
+                            checked={(answers[question.id] as string[])?.includes("dime")}
+                            onChange={(e) => {
+                              const currentVal = (answers[question.id] as string[]) || []
+                              if (e.target.checked) {
+                                setAnswers((prev) => ({ ...prev, [question.id]: [...currentVal, "dime"] }))
+                              } else {
+                                setAnswers((prev) => ({
+                                  ...prev,
+                                  [question.id]: currentVal.filter((v) => v !== "dime"),
+                                }))
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <label htmlFor="q22-dime">Dime (10¢)</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="q22-quarter"
+                            checked={(answers[question.id] as string[])?.includes("quarter")}
+                            onChange={(e) => {
+                              const currentVal = (answers[question.id] as string[]) || []
+                              if (e.target.checked) {
+                                setAnswers((prev) => ({ ...prev, [question.id]: [...currentVal, "quarter"] }))
+                              } else {
+                                setAnswers((prev) => ({
+                                  ...prev,
+                                  [question.id]: currentVal.filter((v) => v !== "quarter"),
+                                }))
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <label htmlFor="q22-quarter">Quarter (25¢)</label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {question.id === 24 && (
+                    <div className="space-y-3">
+                      <p className="text-gray-700">Sélectionnez les formes que vous devez dessiner:</p>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="q24-square"
+                            checked={(answers[question.id] as string[])?.includes("square")}
+                            onChange={(e) => {
+                              const currentVal = (answers[question.id] as string[]) || []
+                              if (e.target.checked) {
+                                setAnswers((prev) => ({ ...prev, [question.id]: [...currentVal, "square"] }))
+                              } else {
+                                setAnswers((prev) => ({
+                                  ...prev,
+                                  [question.id]: currentVal.filter((v) => v !== "square"),
+                                }))
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <label htmlFor="q24-square">Carré</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="q24-triangle"
+                            checked={(answers[question.id] as string[])?.includes("triangle")}
+                            onChange={(e) => {
+                              const currentVal = (answers[question.id] as string[]) || []
+                              if (e.target.checked) {
+                                setAnswers((prev) => ({ ...prev, [question.id]: [...currentVal, "triangle"] }))
+                              } else {
+                                setAnswers((prev) => ({
+                                  ...prev,
+                                  [question.id]: currentVal.filter((v) => v !== "triangle"),
+                                }))
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <label htmlFor="q24-triangle">Triangle</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="q24-circle"
+                            checked={(answers[question.id] as string[])?.includes("circle")}
+                            onChange={(e) => {
+                              const currentVal = (answers[question.id] as string[]) || []
+                              if (e.target.checked) {
+                                setAnswers((prev) => ({ ...prev, [question.id]: [...currentVal, "circle"] }))
+                              } else {
+                                setAnswers((prev) => ({
+                                  ...prev,
+                                  [question.id]: currentVal.filter((v) => v !== "circle"),
+                                }))
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <label htmlFor="q24-circle">Cercle</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="q24-rectangle"
+                            checked={(answers[question.id] as string[])?.includes("rectangle")}
+                            onChange={(e) => {
+                              const currentVal = (answers[question.id] as string[]) || []
+                              if (e.target.checked) {
+                                setAnswers((prev) => ({ ...prev, [question.id]: [...currentVal, "rectangle"] }))
+                              } else {
+                                setAnswers((prev) => ({
+                                  ...prev,
+                                  [question.id]: currentVal.filter((v) => v !== "rectangle"),
+                                }))
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <label htmlFor="q24-rectangle">Rectangle</label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pour les autres questions de dessin, on offre un champ de texte */}
+                  {(question.id === 5 ||
+                    (question.id !== 1 &&
+                      question.id !== 3 &&
+                      question.id !== 6 &&
+                      question.id !== 13 &&
+                      question.id !== 22 &&
+                      question.id !== 24)) && (
+                    <div>
+                      <label className="block text-gray-700 mb-2">Votre réponse:</label>
+                      <textarea
+                        value={(answers[question.id] as string) || ""}
+                        onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                        className="w-full border-2 border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="Écrivez votre réponse ici..."
+                        rows={3}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         )
+
+      case "pattern":
+      case "matching":
+        // Utiliser le même rendu que pour "drawing"
+        return renderQuestion({ ...question, type: "drawing" })
 
       case "fill-in-blank":
         return (
@@ -146,20 +604,20 @@ const Grade1Math: React.FC = () => {
                     <img
                       src={question.image || "/placeholder.svg"}
                       alt={`Question ${question.id}`}
-                      className="max-w-full h-auto mb-3 max-h-48 object-contain rounded-md border border-gray-200"
+                      className="max-w-full h-auto mb-3 object-contain"
                     />
                   </div>
                 )}
 
-                <div className="space-y-4">
+                <div className="space-y-4 mt-4">
                   {question.blanks?.map((blank, index) => (
                     <div key={index} className="flex flex-col">
-                      <p className="mb-2 text-gray-700">{blank}</p>
+                      <p className="mb-2 text-gray-700 font-mono text-lg">{blank}</p>
                       <input
                         type="text"
                         value={((answers[question.id] as string[]) || [])[index] || ""}
                         onChange={(e) => handleBlankAnswerChange(question.id, index, e.target.value)}
-                        className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full md:w-1/2"
+                        className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-20 text-center font-mono text-lg"
                       />
                     </div>
                   ))}
@@ -169,27 +627,73 @@ const Grade1Math: React.FC = () => {
           </div>
         )
 
-      case "drawing":
+      case "clock":
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
               <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
+
                 {question.image && (
                   <div className="mb-4">
                     <img
                       src={question.image || "/placeholder.svg"}
                       alt={`Question ${question.id}`}
-                      className="max-w-full h-auto mb-3 max-h-48 object-contain rounded-md border border-gray-200"
+                      className="max-w-full h-auto mb-3 object-contain"
                     />
                   </div>
                 )}
-                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
-                  <p className="text-yellow-700 italic">
-                    Note: For drawing questions, please draw on a separate paper or use the PDF version of this
-                    assessment.
-                  </p>
+
+                <div className="mt-4">
+                  <label className="block text-gray-700 mb-2">Answer:</label>
+                  <input
+                    type="text"
+                    value={(answers[question.id] as string) || ""}
+                    onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                    className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-full md:w-1/3"
+                    placeholder="Enter time"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+
+      case "comparison":
+        return (
+          <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <div className="flex items-start">
+              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <div className="flex-1">
+                <p className="font-medium mb-3 text-gray-800">{question.question}</p>
+
+                {question.image && (
+                  <div className="mb-4">
+                    <img
+                      src={question.image || "/placeholder.svg"}
+                      alt={`Question ${question.id}`}
+                      className="max-w-full h-auto mb-3 object-contain"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-4 mt-4">
+                  {question.blanks?.map((blank, index) => (
+                    <div key={index} className="flex flex-col">
+                      <p className="mb-2 text-gray-700 font-mono text-lg">{blank}</p>
+                      <select
+                        value={((answers[question.id] as string[]) || [])[index] || ""}
+                        onChange={(e) => handleBlankAnswerChange(question.id, index, e.target.value)}
+                        className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-20 text-center font-mono text-lg"
+                      >
+                        <option value="">Select</option>
+                        <option value="<">&lt;</option>
+                        <option value=">">&gt;</option>
+                        <option value="=">=</option>
+                      </select>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -197,19 +701,7 @@ const Grade1Math: React.FC = () => {
         )
 
       default:
-        return (
-          <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
-            <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
-              <div className="flex-1">
-                <p className="font-medium mb-3 text-gray-800">{question.question}</p>
-                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
-                  <p className="text-yellow-700 italic">This question type is not supported in the online version.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
+        return null
     }
   }
 
@@ -319,7 +811,6 @@ const Grade1Math: React.FC = () => {
           </div>
         </div>
 
-        {/* Math Questions */}
         <div className="space-y-6">{quizData.questions.map((question) => renderQuestion(question))}</div>
 
         <div className="flex justify-between mt-8">

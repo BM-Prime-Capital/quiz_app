@@ -33,7 +33,8 @@ export default function QuizPage({ params }: { params: { grade: string; subject:
   const handleSubmit = async () => {
     setIsSubmitting(true)
 
-    // Ici, vous pourriez envoyer les données à votre backend
+
+    // Here, you could send the data to your backend
     console.log({
       studentName,
       date,
@@ -42,7 +43,8 @@ export default function QuizPage({ params }: { params: { grade: string; subject:
       answers,
     })
 
-    // Simuler un délai pour l'envoi
+
+    // Simulate a delay for sending
     setTimeout(() => {
       setIsSubmitting(false)
       router.push(`/${grade}/${subject}/confirmation`)
@@ -51,7 +53,8 @@ export default function QuizPage({ params }: { params: { grade: string; subject:
 
   const isFormComplete = studentName.trim() !== "" && date.trim() !== ""
 
-  // Si nous sommes à l'étape 0, afficher le formulaire d'information
+
+  // If we are at step 0, display the information form
   if (currentStep === 0) {
     return (
       <div className="container mx-auto py-10 px-4">
@@ -67,19 +70,23 @@ export default function QuizPage({ params }: { params: { grade: string; subject:
 
         <Card className="max-w-md mx-auto">
           <CardHeader>
-            <CardTitle>Informations de l&apos;étudiant</CardTitle>
+
+            <CardTitle>Student Information</CardTitle>
             <CardDescription>
-              Veuillez entrer votre nom et la date avant de commencer l&apos;évaluation.
+
+              Please enter your name and date before starting the assessment.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nom:</Label>
+
+              <Label htmlFor="name">Name:</Label>
               <Input
                 id="name"
                 value={studentName}
                 onChange={(e) => setStudentName(e.target.value)}
-                placeholder="Entrez votre nom complet"
+
+                placeholder="Enter your full name"
               />
             </div>
             <div className="space-y-2">
@@ -89,7 +96,8 @@ export default function QuizPage({ params }: { params: { grade: string; subject:
           </CardContent>
           <CardFooter>
             <Button className="w-full" onClick={() => setCurrentStep(1)} disabled={!isFormComplete}>
-              Commencer l&apos;évaluation
+
+              Start Assessment
             </Button>
           </CardFooter>
         </Card>
@@ -106,12 +114,14 @@ export default function QuizPage({ params }: { params: { grade: string; subject:
               Grade {grade} - {subject.toUpperCase()}
             </h1>
             <p className="text-muted-foreground">
-              Nom: {studentName} | Date: {date}
+
+              Name: {studentName} | Date: {date}
             </p>
           </div>
           <div className="text-right">
             <p className="text-sm text-muted-foreground">
-              Question {currentStep} sur {questions.length}
+
+              Question {currentStep} of {questions.length}
             </p>
           </div>
         </div>
@@ -171,7 +181,8 @@ export default function QuizPage({ params }: { params: { grade: string; subject:
                       <Textarea
                         value={answers[question.id] || ""}
                         onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                        placeholder="Écrivez votre réponse ici..."
+
+                        placeholder="Write your answer here..."
                         className="min-h-[100px]"
                       />
                     )}
@@ -179,7 +190,8 @@ export default function QuizPage({ params }: { params: { grade: string; subject:
                     {question.type === QuestionType.DRAWING && (
                       <div className="border rounded-md p-4 text-center">
                         <p className="text-muted-foreground mb-2">
-                          Cette question nécessite un dessin. Veuillez noter votre réponse sur papier.
+
+                          This question requires a drawing. Please write your answer on paper.
                         </p>
                       </div>
                     )}
@@ -188,14 +200,17 @@ export default function QuizPage({ params }: { params: { grade: string; subject:
               </CardContent>
               <CardFooter className="flex justify-between">
                 <Button variant="outline" onClick={() => setCurrentStep(currentStep - 1)} disabled={currentStep <= 1}>
-                  Précédent
+
+                  Previous
                 </Button>
 
                 {currentStep < questions.length ? (
-                  <Button onClick={() => setCurrentStep(currentStep + 1)}>Suivant</Button>
+
+                  <Button onClick={() => setCurrentStep(currentStep + 1)}>Next</Button>
                 ) : (
                   <Button onClick={handleSubmit} disabled={isSubmitting}>
-                    {isSubmitting ? "Envoi en cours..." : "Terminer l'évaluation"}
+
+                    {isSubmitting ? "Submitting..." : "Finish Assessment"}
                   </Button>
                 )}
               </CardFooter>
