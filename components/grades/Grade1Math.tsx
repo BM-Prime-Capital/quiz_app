@@ -6,6 +6,11 @@ import { grade1MathData, type Question } from "@/data/grade1/mathData"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle } from "lucide-react"
 
+// Modification du composant Grade1Math pour intégrer la soumission
+// Ajoutez ces imports au début du fichier
+import SubmitAssessmentButton from "@/components/SubmitAssessmentButton"
+import AssessmentResultModal from "@/components/AssessmentResultModal"
+
 const Grade1Math: React.FC = () => {
   const quizData = grade1MathData
 
@@ -16,16 +21,24 @@ const Grade1Math: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0) // 0: info, 1: questions
   const [submitted, setSubmitted] = useState(false)
 
+  // À l'intérieur du composant Grade1Math, ajoutez ces états
+  const [startTime, setStartTime] = useState<Date | null>(null)
+  const [showResultModal, setShowResultModal] = useState(false)
+  const [resultPdfUrl, setResultPdfUrl] = useState("")
+  const [score, setScore] = useState(0)
+
   // Charger les données depuis localStorage au montage du composant
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedName = localStorage.getItem("mathStudentName")
-      const savedDate = localStorage.getItem("mathDate")
       const savedAnswers = localStorage.getItem("mathAnswers")
       const savedStep = localStorage.getItem("mathCurrentStep")
 
+      // Toujours utiliser la date du jour
+      const today = new Date().toISOString().split("T")[0]
+      setDate(today)
+
       if (savedName) setStudentName(savedName)
-      if (savedDate) setDate(savedDate)
       if (savedAnswers) setAnswers(JSON.parse(savedAnswers))
       if (savedStep) setCurrentStep(Number.parseInt(savedStep))
     }
@@ -50,6 +63,13 @@ const Grade1Math: React.FC = () => {
       localStorage.removeItem("mathCurrentStep")
     }
   }, [submitted])
+
+  // Ajoutez cet useEffect pour enregistrer l'heure de début
+  useEffect(() => {
+    if (currentStep === 1 && !startTime) {
+      setStartTime(new Date())
+    }
+  }, [currentStep, startTime])
 
   const handleAnswerChange = (questionId: number, answer: string) => {
     setAnswers((prev) => ({
@@ -76,17 +96,12 @@ const Grade1Math: React.FC = () => {
     }))
   }
 
+  // Remplacez la fonction handleSubmit existante par celle-ci
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Ici vous pourriez envoyer les données à votre backend
-    console.log({
-      studentName,
-      date,
-      answers,
-    })
-
-    setSubmitted(true)
+    // Ici, au lieu de définir directement submitted à true,
+    // nous allons laisser le bouton de soumission gérer cela
   }
 
   // Remplacer la fonction renderQuestion par cette version améliorée qui permet de répondre à toutes les questions en ligne
@@ -762,10 +777,9 @@ const Grade1Math: React.FC = () => {
               <label className="font-bold text-gray-700">Date:</label>
               <input
                 type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                value={date || new Date().toISOString().split("T")[0]}
+                readOnly
                 className="w-full border-b-2 border-gray-400 mt-1 h-10 focus:outline-none focus:border-green-500 px-2"
-                required
               />
             </div>
           </div>
@@ -822,14 +836,46 @@ const Grade1Math: React.FC = () => {
             Back
           </button>
 
-          <button
-            type="submit"
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
-          >
-            Submit Assessment
-          </button>
+          {/* Dans le rendu, remplacez le bouton de soumission par notre composant personnalisé */}
+          {/* Remplacez:
+          // <button type="submit" className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200">
+          //   Submit Assessment
+          // </button>
+
+          // Par: */}
+          {!submitted && (
+        <SubmitAssessmentButton
+          studentName={studentName}
+          grade="1"
+          subject="math"
+          answers={answers}
+          startTime={startTime || new Date()}
+          onSuccess={(score, emailPreviewUrl) => {
+            setScore(score)
+            setShowResultModal(true)
+            setSubmitted(true)
+            // Stocker l'URL de prévisualisation de l'email si disponible
+            if (emailPreviewUrl) {
+              localStorage.setItem("emailPreviewUrl", emailPreviewUrl)
+            }
+          }}
+        />
+      )}
         </div>
       </form>
+      {/* Ajoutez le modal de résultat à la fin du composant, juste avant le dernier return */}
+       {/* Modal de résultat */}
+       {showResultModal && (
+        <AssessmentResultModal
+          isOpen={showResultModal}
+          onClose={() => setShowResultModal(false)}
+          studentName={studentName}
+          grade="1"
+          subject="math"
+          score={score}
+          emailPreviewUrl={localStorage.getItem("emailPreviewUrl") || undefined}
+        />
+      )}
     </div>
   )
 }

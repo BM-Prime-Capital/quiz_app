@@ -3,6 +3,11 @@ import Grade1ELA from "@/components/grades/Grade1ELA"
 import Grade1Math from "@/components/grades/Grade1Math"
 import Grade2Math from "@/components/grades/Grade2Math"
 import Grade3Math from "@/components/grades/Grade3Math"
+import Grade4Math from "@/components/grades/Grade4Math"
+import Grade5Math from "@/components/grades/Grade5Math"
+import Grade6Math from "@/components/grades/Grade6Math"
+import Grade7Math from "@/components/grades/Grade7Math"
+import Grade8Math from "@/components/grades/Grade8Math"
 import Grade2ELA from "@/components/grades/Grade2ELA"
 import Grade3ELA from "@/components/grades/Grade3ELA"
 import Grade4ELA from "@/components/grades/Grade4ELA"
@@ -25,10 +30,15 @@ export default function SubjectPage({ params }: { params: { grade: string; subje
       {grade === "2" && subject === "ela" && <Grade2ELA />}
       {grade === "3" && subject === "math" && <Grade3Math />}
       {grade === "3" && subject === "ela" && <Grade3ELA />}
+      {grade === "4" && subject === "math" && <Grade4Math />}
       {grade === "4" && subject === "ela" && <Grade4ELA />}
+      {grade === "5" && subject === "math" && <Grade5Math />}
       {grade === "5" && subject === "ela" && <Grade5ELA />}
+      {grade === "6" && subject === "math" && <Grade6Math />}
       {grade === "6" && subject === "ela" && <Grade6ELA />}
+      {grade === "7" && subject === "math" && <Grade7Math />}
       {grade === "7" && subject === "ela" && <Grade7ELA />}
+      {grade === "8" && subject === "math" && <Grade8Math />}
       {grade === "8" && subject === "ela" && <Grade8ELA />}
 
       {/* Pour les autres grades et sujets qui ne sont pas encore implémentés */}
@@ -36,11 +46,11 @@ export default function SubjectPage({ params }: { params: { grade: string; subje
         (grade === "1" && (subject === "ela" || subject === "math")) ||
         (grade === "2" && (subject === "ela" || subject === "math")) ||
         (grade === "3" && (subject === "ela" || subject === "math")) ||
-        (grade === "4" && subject === "ela") ||
-        (grade === "5" && subject === "ela") ||
-        (grade === "6" && subject === "ela") ||
-        (grade === "7" && subject === "ela") ||
-        (grade === "8" && subject === "ela")
+        (grade === "4" && (subject === "ela" || subject === "math")) ||
+        (grade === "5" && (subject === "ela" || subject === "math")) ||
+        (grade === "6" && (subject === "ela" || subject === "math")) ||
+        (grade === "7" && (subject === "ela" || subject === "math")) ||
+        (grade === "8" && (subject === "ela" || subject === "math"))
       ) && (
         <div className="container mx-auto py-10 px-4 text-center">
           <h1 className="text-3xl font-bold mb-4">
