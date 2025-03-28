@@ -1,8 +1,5 @@
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
 import type { Transporter, TransportOptions } from "nodemailer";
-
-dotenv.config(); // Charge les variables d'environnement
 
 interface EmailResult {
   success: boolean;
@@ -25,46 +22,28 @@ interface SmtpOptions {
 }
 
 export async function sendEmail(data: {
-  to: string;
+  to: string | string[];  // Modifié pour accepter un tableau
   subject: string;
   text: string;
   html?: string;
   attachments?: any[];
 }): Promise<EmailResult> {
-  const requiredEnvVars = [
-    "MAIL_HOST",
-    "MAIL_PORT",
-    "MAIL_USERNAME",
-    "MAIL_PASSWORD",
-    "MAIL_FROM_ADDRESS"
-  ];
-  const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-  if (missingVars.length > 0) {
-    const error = `❌ Missing required email configuration: ${missingVars.join(", ")}`;
-    console.error(error);
-    return { success: false, error };
-  }
-  // Configuration SMTP
+  // Configuration SMTP directe
   const smtpOptions: SmtpOptions = {
-    host: process.env.MAIL_HOST!,
-    port: parseInt(process.env.MAIL_PORT || "587"),
-    secure: process.env.MAIL_ENCRYPTION === "ssl", // `true` si SSL, `false` pour STARTTLS
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // TLS
     auth: {
-      user: process.env.MAIL_USERNAME!,
-      pass: process.env.MAIL_PASSWORD!
+      user: "noreply@dreametrix.com",
+      pass: "hvre ydpz qhzc flas"
     },
-    tls: process.env.MAIL_ENCRYPTION === "tls" ? {
+    tls: {
       minVersion: "TLSv1.2",
-      rejectUnauthorized: false // Peut être mis à `true` si l'autorité de certification est fiable
-    } : undefined
+      rejectUnauthorized: false
+    }
   };
 
-  console.log("📧 SMTP Configuration:", {
-    host: smtpOptions.host,
-    port: smtpOptions.port,
-    secure: smtpOptions.secure
-  });
+  console.log("📧 SMTP Configuration:", smtpOptions);
 
   let transporter: Transporter | null = null;
 
@@ -74,8 +53,8 @@ export async function sendEmail(data: {
     console.log("✅ Server is ready to send emails");
 
     const mailOptions = {
-      from: `"${process.env.MAIL_FROM_NAME || "Radiant Prep"}" <${process.env.MAIL_FROM_ADDRESS}>`,
-      to: data.to,
+      from: '"Radiant Prep" <noreply@dreametrix.com>',
+      to: Array.isArray(data.to) ? data.to.join(', ') : data.to,
       subject: data.subject,
       text: data.text,
       html: data.html || data.text,
@@ -87,7 +66,7 @@ export async function sendEmail(data: {
       }))
     };
 
-    console.log("🚀 Sending email to:", data.to);
+    console.log("🚀 Sending email to:", mailOptions.to);
     const info = await transporter.sendMail(mailOptions);
 
     console.log("✅ Email sent successfully:", info.messageId);

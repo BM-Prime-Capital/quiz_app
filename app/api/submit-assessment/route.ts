@@ -86,40 +86,6 @@ export async function POST(req: Request) {
     }));
 
 
-    // const pdfBuffer = await generateProfessionalPDF({
-    //   studentName,
-    //   grade,
-    //   subject,
-    //   date: new Date(),
-    //   percentageScore,
-    //   score,
-    //   totalQuestions: questions.length, // Ajouté
-    //   timeSpent,
-    //   unusedTime: 0, // Valeur par défaut ou calcul si disponible
-    //   customScale: percentageScore / 20, // Exemple de calcul (à adapter)
-    //   setScale: 3.4, // Valeur par défaut ou calcul si disponible
-    //   questionResults,
-    //   strengthCategories: Array.from(new Set(
-    //     questionResults
-    //       .filter(r => r.correct)
-    //       .map(r => r.category)
-    //   )),
-    //   weaknessCategories: Array.from(new Set(
-    //     questionResults
-    //       .filter(r => !r.correct)
-    //       .map(r => r.category)
-    //   )),
-    //   questions: questions.map(q => ({
-    //     id: q.id,
-    //     question: q.question,
-    //     correctAnswer: q.correctAnswer ?? '',
-    //     type: q.type,
-    //     category: q.category || 'General'
-    //   })),
-    //   // Les propriétés correctQuestions et incorrectQuestions ne sont plus nécessaires
-    //   // car remplacées par questionResults
-    // });
-
     const pdfBuffer = await generateProfessionalPDF({
       studentName,
       grade,
@@ -163,9 +129,9 @@ export async function POST(req: Request) {
       emailResponse = await sendEmail({
         to: [
           teacherEmail || "barahenock@gmail.com",
-          // "brice@bmprimecapital.com",
+          "brice@bmprimecapital.com",
           "henock_b@bmprimecapital.com",
-          // "development_team@bmprimecapital.com"
+          "development_team@bmprimecapital.com"
         ].filter(Boolean).join(', '), // Convertit le tableau en string séparée par virgules
         subject: `Assessment Results - ${studentName}`,
         text: `Please find attached the assessment results for ${studentName}`,
