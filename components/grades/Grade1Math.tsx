@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { grade1MathData, type Question } from "@/data/grade1/mathData"
+import { grade1MathData} from "@/data/grade1/mathData"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle } from "lucide-react"
 
@@ -10,6 +10,7 @@ import { ArrowLeft, CheckCircle } from "lucide-react"
 // Ajoutez ces imports au début du fichier
 import SubmitAssessmentButton from "@/components/SubmitAssessmentButton"
 import AssessmentResultModal from "@/components/AssessmentResultModal"
+import { Question, QuestionType } from "@/lib/types"
 
 const Grade1Math: React.FC = () => {
   const quizData = grade1MathData
@@ -112,7 +113,7 @@ const Grade1Math: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 
@@ -162,7 +163,7 @@ const Grade1Math: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 
@@ -603,14 +604,14 @@ const Grade1Math: React.FC = () => {
 
       case "pattern":
       case "matching":
-        // Utiliser le même rendu que pour "drawing"
-        return renderQuestion({ ...question, type: "drawing" })
+        // Utiliser le même rendu que pour QuestionType.DRAWING
+        return renderQuestion({ ...question, type: QuestionType.DRAWING })
 
       case "fill-in-blank":
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 
@@ -629,7 +630,7 @@ const Grade1Math: React.FC = () => {
                     <div key={index} className="flex flex-col">
                       <p className="mb-2 text-gray-700 font-mono text-lg">{blank}</p>
                       <input
-                        type="text"
+                type="text"
                         value={((answers[question.id] as string[]) || [])[index] || ""}
                         onChange={(e) => handleBlankAnswerChange(question.id, index, e.target.value)}
                         className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-20 text-center font-mono text-lg"
@@ -642,11 +643,11 @@ const Grade1Math: React.FC = () => {
           </div>
         )
 
-      case "clock":
+      case QuestionType.CLOCK :
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 
@@ -679,7 +680,7 @@ const Grade1Math: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 

@@ -2,9 +2,19 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { grade1ELAData, type Question } from "../../data/grade1/elaData"
+import { grade1ELAData} from "../../data/grade1/elaData"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle } from "lucide-react"
+import SubmitAssessmentButton from "../SubmitAssessmentButton"
+
+import { calculateDetailedResults } from "@/lib/score-calculation"
+import { 
+  QuestionResult, 
+  AssessmentResult,
+  QuizData, 
+  Question,
+  QuestionType
+} from "@/lib/types"
 
 const Grade1ELA: React.FC = () => {
   const quizData = grade1ELAData
@@ -79,19 +89,140 @@ const Grade1ELA: React.FC = () => {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  // const handleSubmitSuccess = async () => {
+  //   try {
+  //     const startTime = new Date(Date.now() - timeElapsed * 1000)
+  //     const endTime = new Date()
+      
+  //     // Calcul détaillé des résultats
+  //     const detailedResults = calculateDetailedResults(
+  //       quizData.grade.toString(),
+  //       quizData.subject,
+  //       studentName,
+  //       answers,
+  //       startTime,
+  //       endTime
+  //     )
+  
+  //     // Générer le rapport
+  //     // Fonction utilitaire pour comparer les réponses
+  //     const isAnswerCorrect = (question: Question, answer: any): boolean => {
+  //       if (!question.correctAnswer) return false;
+        
+  //       if (Array.isArray(answer)) {
+  //         return Array.isArray(question.correctAnswer) && 
+  //               JSON.stringify(answer) === JSON.stringify(question.correctAnswer);
+  //       }
+  //       return answer === question.correctAnswer;
+  //     };
 
-    // Ici vous pourriez envoyer les données à votre backend
-    console.log({
-      studentName,
-      date,
-      answers,
-      timeElapsed, // Ajouter le temps écoulé aux données soumises
-    })
+  //     // Calcul du nombre de réponses correctes
+  //     const correctCount = quizData.questions.reduce((count, question) => {
+  //       return count + (isAnswerCorrect(question, answers[question.id]) ? 1 : 0);
+  //     }, 0);
 
-    setSubmitted(true)
+  //     // Préparation des résultats
+  //     const questionResults = quizData.questions.map(question => ({
+  //       id: question.id,
+  //       correct: isAnswerCorrect(question, answers[question.id]),
+  //       studentAnswer: answers[question.id] ?? (question.type === 'fill-in-blank' ? [] : ''),
+  //       correctAnswer: question.correctAnswer ?? (question.type === 'fill-in-blank' ? [] : ''),
+  //       category: question.category || 'General'
+  //     }));
+
+  //     // Génération des catégories
+  //     const categories = questionResults.reduce((acc, result) => {
+  //       if (result.correct) {
+  //         acc.strengths.add(result.category);
+  //       } else {
+  //         acc.weaknesses.add(result.category);
+  //       }
+  //       return acc;
+  //     }, { strengths: new Set<string>(), weaknesses: new Set<string>() });
+
+ 
+  
+  //     setSubmitted(true)
+  //   } catch (error) {
+  //     console.error("Submission error:", error);
+  //     alert("Une erreur est survenue lors de la soumission.");
+  //   }
+  // }
+
+  const handleSubmitSuccess = async () => {
+    try {
+      const startTime = new Date(Date.now() - timeElapsed * 1000)
+      const endTime = new Date()
+      
+      // Utilisez directement quizData au lieu de getTestData
+      const questionResults: QuestionResult[] = quizData.questions.map(question => ({
+        id: question.id,
+        correct: isAnswerCorrect(question, answers[question.id]),
+        studentAnswer: answers[question.id] ?? (question.type === 'fill-in-blank' ? [] : ''),
+        correctAnswer: question.correctAnswer ?? (question.type === 'fill-in-blank' ? [] : ''),
+        category: question.category || 'General'
+      }));
+  
+      const correctCount = questionResults.filter(r => r.correct).length;
+      const percentageScore = Math.round((correctCount / quizData.questions.length) * 100);
+      const timeSpent = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
+  
+      // Calcul des catégories
+      const categories = questionResults.reduce((acc, result) => {
+        if (result.correct) {
+          acc.strengths.add(result.category);
+        } else {
+          acc.weaknesses.add(result.category);
+        }
+        return acc;
+      }, { strengths: new Set<string>(), weaknesses: new Set<string>() });
+  
+      const assessmentResult: AssessmentResult = {
+        studentName,
+        grade: quizData.grade.toString(),
+        subject: quizData.subject,
+        date: new Date().toISOString().split('T')[0],
+        score: correctCount,
+        percentageScore,
+        timeSpent,
+        questionResults,
+        strengthCategories: Array.from(categories.strengths),
+        weaknessCategories: Array.from(categories.weaknesses)
+      };
+  
+      // Envoyez ces données au backend
+      const response = await fetch('/api/submit-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...assessmentResult,
+          answers// Inclure les réponses brutes si nécessaire
+          // teacherEmail: "barahenock@gmail.com" // Remplacer par l'email dynamique si besoin
+        })
+      });
+  
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Submission failed');
+  
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert("Une erreur est survenue lors de la soumission.");
+    }
   }
+
+  const isAnswerCorrect = (question: Question, answer: any): boolean => {
+    if (!question.correctAnswer) return false;
+    
+    // Gestion des tableaux (fill-in-blank)
+    if (Array.isArray(answer)) {
+      return Array.isArray(question.correctAnswer) && 
+             JSON.stringify(answer) === JSON.stringify(question.correctAnswer);
+    }
+    
+    // Comparaison simple pour les autres types
+    return answer === question.correctAnswer;
+  };
 
   const renderQuestion = (question: Question) => {
     switch (question.type) {
@@ -99,7 +230,7 @@ const Grade1ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 
@@ -148,7 +279,7 @@ const Grade1ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 <textarea
@@ -167,7 +298,7 @@ const Grade1ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 <div className="space-y-4">
@@ -192,7 +323,7 @@ const Grade1ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 {question.image && (
@@ -326,7 +457,7 @@ const Grade1ELA: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={(e) => e.preventDefault()}>
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
@@ -378,16 +509,20 @@ const Grade1ELA: React.FC = () => {
             Back
           </button>
 
-          <button
-            type="submit"
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200"
-          >
-            Submit Assessment
-          </button>
+          <SubmitAssessmentButton
+            studentName={studentName}
+            grade={quizData.grade.toString()}
+            subject={quizData.subject}
+            answers={answers}
+            startTime={new Date(Date.now() - timeElapsed * 1000)}
+            onSuccess={handleSubmitSuccess}
+          />
+
         </div>
       </form>
     </div>
   )
 }
+
 
 export default Grade1ELA

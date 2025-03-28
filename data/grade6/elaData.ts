@@ -1,16 +1,9 @@
-export interface Question {
-    id: number
-    type: "multiple-choice" | "text" | "writing" | "grammar"
-    question: string
-    options?: string[]
-    correctAnswer?: string | string[]
-    passage?: string
-  }
+import { Question, QuizData, QuestionType } from "@/lib/types";
   
   export const grade6ELAQuestions: Question[] = [
     {
       id: 1,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What is lightning?",
       options: ["It occurs because of Zeus", "A rod of fire", "The effect of God sneezing", "A large electrical current"],
       correctAnswer: "A large electrical current",
@@ -24,24 +17,24 @@ export interface Question {
     },
     {
       id: 2,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What do you think happened when Benjamin Franklin touched the key?",
       options: ["He was struck by lightning", "His hand got burned", "He felt a shock", "Nothing happened"],
       correctAnswer: "He felt a shock",
     },
     {
       id: 3,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "What was the purpose of Franklin's experiment?",
     },
     {
       id: 4,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Why did Franklin attach a key to the end of his kite?",
     },
     {
       id: 5,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What is the purpose of the passage?",
       options: [
         "To inform the reader about parks",
@@ -60,51 +53,51 @@ export interface Question {
     },
     {
       id: 6,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What is one bad influence for kids mentioned in the passage?",
       options: ["Fighting", "Drugs", "Alcohol", "Smoking"],
       correctAnswer: "Drugs",
     },
     {
       id: 7,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "What are some advantages of parks?",
     },
     {
       id: 8,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Why would the community be strengthened because of parks?",
     },
     {
       id: 9,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What is the subject of this sentence? Sally's dog jumped over the obstacle.",
       options: ["Sally", "Dog", "Obstacle", "None of the above"],
       correctAnswer: "Dog",
     },
     {
       id: 10,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Which underlined part is incorrect? Cleopatra discovers gold in the hidden chamber a week ago.",
       options: ["Discovers", "Hidden", "Week", "None of the above"],
       correctAnswer: "Discovers",
     },
     {
       id: 11,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Take out the trash Bruno. What type of sentence is this?",
       options: ["Exclamatory", "Interrogative", "Imperative", "Declarative"],
       correctAnswer: "Imperative",
     },
     {
       id: 12,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question: "Correct the following sentence: alexander was a great general who conquered many territorys.",
       correctAnswer: "Alexander was a great general who conquered many territories.",
     },
     {
       id: 13,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question:
         "What does the word impaled mean in the following sentence? Maximus was impaled by the dagger but he still managed to defeat the vile emperor.",
       options: ["Chopped", "Stabbed", "Scraped", "Stung"],
@@ -112,27 +105,27 @@ export interface Question {
     },
     {
       id: 14,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question: "Correct the following sentence: The college took their time in sending me a reply.",
       correctAnswer: "The college took its time in sending me a reply.",
     },
     {
       id: 15,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What is this sentence missing? Is Constantine ready to go fishing with his dad",
       options: ["Capital", "Period", "Question Mark", "Comma"],
       correctAnswer: "Question Mark",
     },
     {
       id: 16,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Which underlined part is incorrect? The teacher gave Jack and I homework over the summer vacation.",
       options: ["gave", "I", "over", "summer"],
       correctAnswer: "I",
     },
     {
       id: 17,
-      type: "writing",
+      type: QuestionType.WRITING,
       question: "Should uniforms be mandatory at school?",
     },
   ]

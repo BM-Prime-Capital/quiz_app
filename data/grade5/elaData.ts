@@ -1,17 +1,9 @@
-export interface Question {
-    id: number
-    type: "multiple-choice" | "text" | "writing" | "grammar" | "fill-in"
-    question: string
-    options?: string[]
-    correctAnswer?: string | string[]
-    passage?: string
-    blanks?: string[]
-  }
+import { Question, QuizData, QuestionType } from "@/lib/types";
   
   export const grade5ELAQuestions: Question[] = [
     {
       id: 1,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: 'What does the word "diverse" mean in paragraph one?',
       options: ["Having different kinds", "Huge", "Beautiful", "Strange"],
       correctAnswer: "Having different kinds",
@@ -27,24 +19,24 @@ export interface Question {
     },
     {
       id: 2,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Which of these is not found in the tropical rain forests?",
       options: ["Fruits", "Vanilla", "Butter", "Medicine"],
       correctAnswer: "Butter",
     },
     {
       id: 3,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Why do you think hardly any sunlight reaches the understory or the forest floor?",
     },
     {
       id: 4,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "According to the passage, why are tropical rain forests being destroyed?",
     },
     {
       id: 5,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What was the last thing Max did to get ready for Christmas?",
       options: [
         "Mail letters at the post office",
@@ -67,7 +59,7 @@ export interface Question {
     },
     {
       id: 6,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Why do you think uncle Robert told Max that Santa Claus brought the present?",
       options: [
         "To trick Max",
@@ -79,37 +71,37 @@ export interface Question {
     },
     {
       id: 7,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Do you think Max believed what uncle Robert told him, at the end of the story?",
     },
     {
       id: 8,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Why did the author write this story?",
     },
     {
       id: 9,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question:
         "Underline the adjective(s) in the following sentence: After taking a shower, Mike's hair was smooth and soft.",
       correctAnswer: ["smooth", "soft"],
     },
     {
       id: 10,
-      type: "fill-in",
+      type: QuestionType.FILL_IN,
       question: "In the space given write an antonym for each word:",
       blanks: ["Happy: _____", "Light: _____", "Expensive: _____"],
     },
     {
       id: 11,
-      type: "fill-in",
+      type: QuestionType.FILL_IN,
       question: "Choose the correct homonym for each sentence. Homonym: ate, eight",
       blanks: ["I _____ three hotdogs and two burgers at the picnic.", "There are _____ types of ice cream flavors."],
       correctAnswer: ["ate", "eight"],
     },
     {
       id: 12,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question:
         "Pick the word that best completes the sentence: Even though Kevin knew the answer, he was too _____ to raise his hand.",
       options: ["Sick", "Embarrassed", "Sad"],
@@ -117,33 +109,33 @@ export interface Question {
     },
     {
       id: 13,
-      type: "fill-in",
+      type: QuestionType.FILL_IN,
       question: "Write the plural of each word:",
       blanks: ["Church: _____", "Butterfly: _____", "Prefix: _____", "Pen: _____"],
       correctAnswer: ["Churches", "Butterflies", "Prefixes", "Pens"],
     },
     {
       id: 14,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question: "Correct the sentence below: The barn max owned looked mysterious but it also looked like home.",
       correctAnswer: "The barn Max owned looked mysterious, but it also looked like home.",
     },
     {
       id: 15,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question: "Correct the sentence below: After finishing her dinner, Sandy asked her Mom can i have a cookie?",
       correctAnswer: 'After finishing her dinner, Sandy asked her Mom, "Can I have a cookie?"',
     },
     {
       id: 16,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question:
         "Replace the abbreviation with its meaning: After class Mike came over to my apt. to play some video games.",
       correctAnswer: "After class Mike came over to my apartment to play some video games.",
     },
     {
       id: 17,
-      type: "writing",
+      type: QuestionType.WRITING,
       question:
         "Think of an event that really made you happy. Think about what parts of this event made you happy. In the space below write about the event and why it made you happy.",
     },

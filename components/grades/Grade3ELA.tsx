@@ -2,9 +2,10 @@
 
 import type React from "react"
 import { useState } from "react"
-import { grade3ELAData, type Question } from "../../data/grade3/elaData"
+import { grade3ELAData} from "../../data/grade3/elaData"
 import Link from "next/link"
 import { ArrowLeft, Home, CheckCircle } from "lucide-react"
+import { Question } from "@/lib/types"
 
 const Grade3ELA: React.FC = () => {
   const quizData = grade3ELAData
@@ -85,7 +86,7 @@ const Grade3ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 
@@ -125,7 +126,7 @@ const Grade3ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 <textarea
@@ -144,7 +145,7 @@ const Grade3ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 <div className="space-y-4">
@@ -152,7 +153,7 @@ const Grade3ELA: React.FC = () => {
                     <div key={index} className="flex flex-col">
                       <p className="mb-2 text-gray-700">{blank}</p>
                       <input
-                        type="text"
+                            type="text"
                         value={((answers[question.id] as string[]) || [])[index] || ""}
                         onChange={(e) => handleBlankAnswerChange(question.id, index, e.target.value)}
                         className="border-2 border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full md:w-1/2"
@@ -170,7 +171,7 @@ const Grade3ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 <div className="grid grid-cols-2 gap-6">

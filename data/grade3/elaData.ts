@@ -1,21 +1,9 @@
-export interface Question {
-    id: number
-    type: "multiple-choice" | "text" | "writing" | "matching" | "fill-in" | "word-sort"
-    question: string
-    options?: string[]
-    correctAnswer?: string | string[]
-    blanks?: string[]
-    passage?: string
-    columns?: {
-      title: string
-      items: string[]
-    }[]
-  }
+import { Question, QuizData, QuestionType } from "@/lib/types";
   
   export const grade3ELAQuestions: Question[] = [
     {
       id: 1,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "How are rainbows made?",
       options: [
         "When Ix Chel stands in the sky",
@@ -32,7 +20,7 @@ export interface Question {
     },
     {
       id: 2,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What are myths?",
       options: [
         "The scientific method",
@@ -44,17 +32,17 @@ export interface Question {
     },
     {
       id: 3,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Why do we no longer use myths?",
     },
     {
       id: 4,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "What are the colors of the rainbow?",
     },
     {
       id: 5,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What was the story mostly about?",
       options: [
         "The Oregon Country Fair",
@@ -77,31 +65,31 @@ export interface Question {
     },
     {
       id: 6,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What word best describes Emily at the end of the story?",
       options: ["Nervous", "Brave", "Shy", "Angry"],
       correctAnswer: "Brave",
     },
     {
       id: 7,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Why did the author most likely write this story?",
     },
     {
       id: 8,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "What will happen if Emily continues to practice dancing and participating in the dance competition?",
     },
     {
       id: 9,
-      type: "fill-in",
+      type: QuestionType.FILL_IN,
       question: "Write the antonym for each word:",
       blanks: ["Hot: _____", "Big: _____"],
       correctAnswer: ["cold", "small"],
     },
     {
       id: 10,
-      type: "matching",
+      type: QuestionType.MATCHING,
       question: "Connects the words that are homonyms.",
       columns: [
         {
@@ -116,21 +104,21 @@ export interface Question {
     },
     {
       id: 11,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Replace the bold word in the sentence: My sister can imitate the sound of a monkey",
       options: ["Hear", "Copy", "Quiver", "Sing"],
       correctAnswer: "Copy",
     },
     {
       id: 12,
-      type: "fill-in",
+      type: QuestionType.FILL_IN,
       question: "Choose the correct word for the given sentence: Tom went to the store, _____ bought milk",
       blanks: ["then/than"],
       correctAnswer: ["then"],
     },
     {
       id: 13,
-      type: "matching",
+      type: QuestionType.MATCHING,
       question: "Match the sense with the sensory word:",
       columns: [
         {
@@ -145,21 +133,21 @@ export interface Question {
     },
     {
       id: 14,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Which words are Onomatopoeias?",
       options: ["Splash", "Snake", "Hiss", "Water"],
       correctAnswer: "Splash",
     },
     {
       id: 15,
-      type: "fill-in",
+      type: QuestionType.FILL_IN,
       question: "Change each word to its plural form. Write the word on the line.",
       blanks: ["During autumn the _____ change colors. (leaf)", "The mother cat has four _____. (baby)"],
       correctAnswer: ["leaves", "babies"],
     },
     {
       id: 16,
-      type: "word-sort",
+      type: QuestionType.WORD_SORT,
       question: "Write each word under the correct heading:",
       columns: [
         {
@@ -174,7 +162,7 @@ export interface Question {
     },
     {
       id: 17,
-      type: "writing",
+      type: QuestionType.WRITING,
       question: "What do you want for your birthday? Explain why.",
     },
   ]

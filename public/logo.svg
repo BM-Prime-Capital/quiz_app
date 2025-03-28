@@ -60,7 +60,7 @@
     
     <!-- Text -->
     <text x="150" y="290" font-family="Arial" font-size="40" font-weight="bold" text-anchor="middle">
-      <tspan class="text">Radiant</tspan> <tspan class="text-blue">Prep</tspan>
+      <tspan class=QuestionType.TEXT>Radiant</tspan> <tspan class="text-blue">Prep</tspan>
     </text>
   </g>
 </svg>

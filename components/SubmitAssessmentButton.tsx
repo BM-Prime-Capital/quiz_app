@@ -10,7 +10,7 @@ interface SubmitAssessmentButtonProps {
   subject: string
   answers: Record<number, string | string[]>
   startTime: Date
-  onSuccess: (score: number, emailPreviewUrl?: string) => void
+  onSuccess: (score: number) => void
 }
 
 export default function SubmitAssessmentButton({
@@ -25,51 +25,53 @@ export default function SubmitAssessmentButton({
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
+    if (!studentName) {
+      setError("Student name is required")
+      return
+    }
+
     setIsSubmitting(true)
     setError(null)
 
     try {
+      const payload = {
+        studentName,
+        grade,
+        subject,
+        answers,
+        startTime: startTime.toISOString(),
+        endTime: new Date().toISOString()
+        // SUPPRIMEZ teacherEmail d'ici
+      }
+
       const response = await fetch("/api/submit-assessment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          studentName,
-          grade,
-          subject,
-          answers,
-          startTime: startTime.toISOString(),
-          endTime: new Date().toISOString(),
-          teacherEmail: "nehemiediav@gmail.com", // Utiliser l'adresse email spécifiée
-        }),
+        body: JSON.stringify(payload),
       })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to submit assessment")
-      }
 
       const data = await response.json()
 
-      if (data.success) {
-        // Générer un score aléatoire entre 60 et 100
-        const randomScore = Math.floor(Math.random() * 41) + 60
-
-        // Appeler le callback de succès avec le score et l'URL de prévisualisation de l'email
-        onSuccess(randomScore, data.emailPreviewUrl)
-      } else {
-        throw new Error(data.error || "Unknown error")
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit assessment")
       }
+
+      const score = data.score || 0 // Utilisez le score retourné par l'API
+      onSuccess(score)
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred")
+      const errorMessage = err instanceof Error ? err.message : "Submission failed"
+      setError(errorMessage)
+      onSuccess(0)
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div>
+    <div className="flex flex-col items-start gap-2">
       <Button
         onClick={handleSubmit}
         disabled={isSubmitting}
@@ -86,12 +88,11 @@ export default function SubmitAssessmentButton({
       </Button>
 
       {error && (
-        <div className="mt-2 text-red-500 flex items-center">
+        <div className="flex items-center text-red-500 text-sm mt-2">
           <AlertCircle className="mr-2 h-4 w-4" />
-          {error}
+          <span>{error}</span>
         </div>
       )}
     </div>
   )
 }
-

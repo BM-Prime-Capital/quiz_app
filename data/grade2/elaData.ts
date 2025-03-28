@@ -1,16 +1,9 @@
-export interface Question {
-    id: number
-    type: "multiple-choice" | "text" | "writing"
-    question: string
-    options?: string[]
-    correctAnswer?: string | string[]
-    passage?: string
-  }
+import { Question, QuizData, QuestionType } from "@/lib/types";
   
   export const grade2ELAQuestions: Question[] = [
     {
       id: 1,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What is the main idea of this passage?",
       options: [
         "If you are confident you can do anything",
@@ -31,26 +24,26 @@ export interface Question {
     },
     {
       id: 2,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What did James forget to bring on the day of the marathon?",
       options: ["His shoes", "His bottle", "His keys", "He didn't forget anything"],
       correctAnswer: "His bottle",
     },
     {
       id: 3,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Why was Joey able to beat James in the marathon?",
       options: ["He was naturally faster", "James was sick", "He practiced and prepared", "James let him win"],
       correctAnswer: "He practiced and prepared",
     },
     {
       id: 4,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "What do you think James will do to prepare for the next marathon?",
     },
     {
       id: 5,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What would be a good title for this passage?",
       options: ["The Age of Moon Rocks", "Astronauts Discover Moon Rocks", "What We Know About Moon Rocks", "The Moon"],
       correctAnswer: "What We Know About Moon Rocks",
@@ -63,14 +56,14 @@ export interface Question {
     // Add remaining questions...
     {
       id: 16,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: 'What does Fri. stand for in "It was cold on Fri., January 15th."',
       options: ["Frying", "Freedom", "Friday", "Freeze"],
       correctAnswer: "Friday",
     },
     {
       id: 17,
-      type: "writing",
+      type: QuestionType.WRITING,
       question: "Write about your Summer vacation.",
     },
   ]

@@ -1,17 +1,9 @@
-export interface Question {
-    id: number
-    type: "multiple-choice" | "text" | "writing" | "fill-in" | "grammar"
-    question: string
-    options?: string[]
-    correctAnswer?: string | string[]
-    passage?: string
-    blanks?: string[]
-  }
+import { Question, QuizData, QuestionType } from "@/lib/types";
   
   export const grade4ELAQuestions: Question[] = [
     {
       id: 1,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "How do monkeys use their tails?",
       options: ["To walk", "To hold things", "To swim", "To attack other animals"],
       correctAnswer: "To hold things",
@@ -25,24 +17,24 @@ export interface Question {
     },
     {
       id: 2,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Why did the author write this passage?",
       options: ["To persuade the reader", "To entertain the reader", "To make fun of animals", "To inform the reader"],
       correctAnswer: "To inform the reader",
     },
     {
       id: 3,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "How does an alligator use its tail differently from a fish?",
     },
     {
       id: 4,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Explain the difference between predator and prey.",
     },
     {
       id: 5,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Why was Jacob able to win his first match in the tournament?",
       options: ["He cheated", "His brother helped him", "He knew his opponent well", "He is a master chess player"],
       correctAnswer: "His brother helped him",
@@ -58,7 +50,7 @@ export interface Question {
     },
     {
       id: 6,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Why did Jacob make mistakes in his first match?",
       options: [
         "He didn't eat a good breakfast",
@@ -70,44 +62,44 @@ export interface Question {
     },
     {
       id: 7,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Describe Jacob's relationship with his brother.",
     },
     {
       id: 8,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Why did Jacob enter the tournament?",
     },
     {
       id: 9,
-      type: "fill-in",
+      type: QuestionType.FILL_IN,
       question: "Write the plural form of the following words:",
       blanks: ["Man: _____", "Mouse: _____", "Child: _____", "Tooth: _____"],
       correctAnswer: ["Men", "Mice", "Children", "Teeth"],
     },
     {
       id: 10,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question: "Correct this sentence: We saw sams book on the table so we decided to return it to him",
       correctAnswer: "We saw Sam's book on the table, so we decided to return it to him.",
     },
     {
       id: 11,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Which word should be capitalized in this sentence? The telescope made the planet saturn look huge.",
       options: ["telescope", "saturn", "huge", "none of the above"],
       correctAnswer: "saturn",
     },
     {
       id: 12,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What is the subject of this sentence? Sally gave her dog the bone to chew on.",
       options: ["Sally", "Dog", "Bone", "Gave"],
       correctAnswer: "Sally",
     },
     {
       id: 13,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question:
         "Choose the best word to complete the sentence below. John was _____ when he saw a group of bulls charging at him.",
       options: ["sad", "frightened", "thankful", "excited"],
@@ -115,27 +107,27 @@ export interface Question {
     },
     {
       id: 14,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question: "Correct the following sentence: The group of fourth graders were going to the park.",
       correctAnswer: "The group of fourth graders was going to the park.",
     },
     {
       id: 15,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What is the past tense of the verb to bring?",
       options: ["Bring", "Bringed", "Brought", "Brung"],
       correctAnswer: "Brought",
     },
     {
       id: 16,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What does the word vile mean in this sentence? The killer was a vile man who hurt innocent people.",
       options: ["Friendly", "Evil", "Strange"],
       correctAnswer: "Evil",
     },
     {
       id: 17,
-      type: "writing",
+      type: QuestionType.WRITING,
       question:
         "Do you think TV has a positive or a negative influence on children? In your essay, be sure to include examples to support your position.",
     },

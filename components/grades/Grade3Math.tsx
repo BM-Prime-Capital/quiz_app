@@ -2,9 +2,10 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { grade3MathData, type Question } from "@/data/grade3/mathData"
+import { grade3MathData} from "@/data/grade3/mathData"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle } from "lucide-react"
+import { Question } from "@/lib/types"
 
 const Grade3Math: React.FC = () => {
   const quizData = grade3MathData
@@ -79,7 +80,7 @@ const Grade3Math: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800 whitespace-pre-line">{question.question}</p>
 
@@ -118,7 +119,7 @@ const Grade3Math: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 
@@ -167,7 +168,7 @@ const Grade3Math: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800 whitespace-pre-line">{question.question}</p>
 

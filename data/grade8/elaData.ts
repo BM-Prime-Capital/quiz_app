@@ -1,16 +1,9 @@
-export interface Question {
-    id: number
-    type: "multiple-choice" | "text" | "writing" | "grammar"
-    question: string
-    options?: string[]
-    correctAnswer?: string | string[]
-    passage?: string
-  }
+import { Question, QuizData, QuestionType } from "@/lib/types";
   
   export const grade8ELAQuestions: Question[] = [
     {
       id: 1,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What is the main idea of the passage?",
       options: [
         "Tiny particles govern our world",
@@ -29,24 +22,24 @@ export interface Question {
     },
     {
       id: 2,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What are the building blocks of matter according to the passage?",
       options: ["Graphite", "Carbon", "Atoms", "Protons and electrons"],
       correctAnswer: "Atoms",
     },
     {
       id: 3,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "What causes two particles to be attracted? What causes them to be repelled?",
     },
     {
       id: 4,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "What suggests that the particles in lead are attracted to the particles in an eraser?",
     },
     {
       id: 5,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What is the main Idea of the Passage?",
       options: [
         "Fire causes pain",
@@ -65,24 +58,24 @@ export interface Question {
     },
     {
       id: 6,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What carries electrical signals to the brain?",
       options: ["Skin", "Muscles", "Neurons", "The brain"],
       correctAnswer: "Neurons",
     },
     {
       id: 7,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Why was Descartes's theory different from previous theories?",
     },
     {
       id: 8,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Describe a neuron and describe its function?",
     },
     {
       id: 9,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question:
         "In which sentence does the word effect have the same meaning as in: The effect of the storm could be seen in the widespread destruction of the town.",
       options: [
@@ -95,14 +88,14 @@ export interface Question {
     },
     {
       id: 10,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "Which underlined part is incorrect? The teacher gave Jack and I homework over the summer vacation.",
       options: ["gave", "I", "summer", "No Error"],
       correctAnswer: "I",
     },
     {
       id: 11,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question:
         "Which underlined part is incorrect? Last week I went on a trip with my friends. We hiked, biked, and we were swimming all day.",
       options: ["trip", "biked", "We were swimming", "No Error"],
@@ -110,13 +103,13 @@ export interface Question {
     },
     {
       id: 12,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question: "Correct the following sentence: We were already to leave when the car suddenly broke down.",
       correctAnswer: "We were all ready to leave when the car suddenly broke down.",
     },
     {
       id: 13,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question:
         "What does the underlined word mean? When the professor continued to ignore the assistant, we knew that the assistant's input was inconsequential.",
       options: ["Inappropriate", "Valuable", "Inspiring", "Irrelevant"],
@@ -124,7 +117,7 @@ export interface Question {
     },
     {
       id: 14,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question:
         "Which transition word would be the most appropriate for this sentence: The apples were salty, ___ the peaches were sweet.",
       options: ["and", "however", "therefore", "also"],
@@ -132,7 +125,7 @@ export interface Question {
     },
     {
       id: 15,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question:
         "What does the underlined word mean? Alice Paul was an advocate of women's voting rights, which was demonstrated through her participation in protests and boycotts.",
       options: ["Against", "Supporter", "Advertise", "Knowledgeable"],
@@ -140,7 +133,7 @@ export interface Question {
     },
     {
       id: 16,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question:
         "Which underlined part is incorrect? Mr. Smith, owner of the car shop, gave I and Allison free ice cream today.",
       options: ["Gave", "Owner", "I", "Today"],
@@ -148,7 +141,7 @@ export interface Question {
     },
     {
       id: 17,
-      type: "writing",
+      type: QuestionType.WRITING,
       question: "Is the death penalty morally correct?",
     },
   ]

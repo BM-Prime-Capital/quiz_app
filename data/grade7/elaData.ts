@@ -1,16 +1,9 @@
-export interface Question {
-    id: number
-    type: "multiple-choice" | "text" | "writing" | "grammar"
-    question: string
-    options?: string[]
-    correctAnswer?: string | string[]
-    passage?: string
-  }
+import { Question, QuizData, QuestionType } from "@/lib/types";
   
   export const grade7ELAQuestions: Question[] = [
     {
       id: 1,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "How did Sally's love for sports help her become an astronaut?",
       options: [
         "All astronauts should play tennis to do well",
@@ -30,7 +23,7 @@ export interface Question {
     },
     {
       id: 2,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What was the first step Sally took to become an astronaut?",
       options: [
         "Pursue a science degree in college",
@@ -42,17 +35,17 @@ export interface Question {
     },
     {
       id: 3,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "What word would you use to describe Sally Ride? Explain",
     },
     {
       id: 4,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "Why did the author write this story?",
     },
     {
       id: 5,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What was this story mostly about?",
       options: [
         "The danger of rattlesnakes",
@@ -71,24 +64,24 @@ export interface Question {
     },
     {
       id: 6,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What does the word delusional mean?",
       options: ["Having unrealistic beliefs", "Seeing things that are not there", "To be liminal", "Being nervous"],
       correctAnswer: "Having unrealistic beliefs",
     },
     {
       id: 7,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "If the author added a paragraph at the end of this story, what would it include?",
     },
     {
       id: 8,
-      type: "text",
+      type: QuestionType.TEXT,
       question: "What words would you use to describe Max? Explain.",
     },
     {
       id: 9,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question:
         "In which sentence does the underlined word have the same meaning as in the sentence below: How will the town recover from the hurricane?",
       options: [
@@ -101,35 +94,35 @@ export interface Question {
     },
     {
       id: 10,
-      type: "multiple-choice",
+      type: QuestionType.MULTIPLE_CHOICE,
       question: "What does the underlined word mean in the sentence below: We camped in the grotto under the cliffs",
       options: ["A tree", "A hut", "A large rock", "A cave"],
       correctAnswer: "A cave",
     },
     {
       id: 11,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question:
         "Insert commas where they are needed: The first wedding in China the marriage of Yumi Lin and Xin Lee took place in 25 B.C.",
       correctAnswer: "The first wedding in China, the marriage of Yumi Lin and Xin Lee, took place in 25 B.C.",
     },
     {
       id: 12,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question:
         "Identify what is underlined as either a phrase or clause: When he was eight years old, he moved to Bronx, New York.",
       correctAnswer: "clause",
     },
     {
       id: 13,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question:
         "Read the sentence and state whether it is a compound sentence or not: Lions and cats have the same number of whiskers—seven.",
       correctAnswer: "Not a compound sentence",
     },
     {
       id: 14,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question:
         "Join these independent clauses using a coordinating conjunction or semicolon: We can wait for Jim. We can leave without him.",
       correctAnswer: [
@@ -139,21 +132,21 @@ export interface Question {
     },
     {
       id: 15,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question:
         "Rewrite the run on sentence: The members of congress are elected by the voters there are six thousand voters this year.",
       correctAnswer: "The members of congress are elected by the voters. There are six thousand voters this year.",
     },
     {
       id: 16,
-      type: "grammar",
+      type: QuestionType.GRAMMAR,
       question:
         'Underline each word that should be capitalized in the sentence: james said, "what time does pokemon start?"',
       correctAnswer: 'James said, "What time does Pokemon start?"',
     },
     {
       id: 17,
-      type: "writing",
+      type: QuestionType.WRITING,
       question: "Compare and contrast the music you like and the music your parents like.",
     },
   ]

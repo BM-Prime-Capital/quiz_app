@@ -2,9 +2,10 @@
 
 import type React from "react"
 import { useState } from "react"
-import { grade7ELAData, type Question } from "../../data/grade7/elaData"
+import { grade7ELAData} from "../../data/grade7/elaData"
 import Link from "next/link"
 import { ArrowLeft, Home, CheckCircle } from "lucide-react"
+import { Question } from "@/lib/types"
 
 const Grade7ELA: React.FC = () => {
   const quizData = grade7ELAData
@@ -61,7 +62,7 @@ const Grade7ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 <div className="space-y-2">
@@ -100,7 +101,7 @@ const Grade7ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 <textarea
@@ -119,7 +120,7 @@ const Grade7ELA: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
                 <textarea

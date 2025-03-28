@@ -2,9 +2,10 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { grade2MathData, type Question } from "@/data/grade2/mathData"
+import { grade2MathData} from "@/data/grade2/mathData"
 import Link from "next/link"
 import { ArrowLeft, CheckCircle } from "lucide-react"
+import { Question } from "@/lib/types"
 
 const Grade2Math: React.FC = () => {
   const quizData = grade2MathData
@@ -110,7 +111,7 @@ const Grade2Math: React.FC = () => {
     setSubmitted(true)
   }
 
-  // Modifier le rendu des questions de type "image-choice" pour les questions d'horloge
+  // Modifier le rendu des questions de type QuestionType.IMAGE_CHOICE pour les questions d'horloge
   const renderQuestion = (question: Question) => {
     switch (question.type) {
       case "multiple-choice":
@@ -118,7 +119,7 @@ const Grade2Math: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 
@@ -157,7 +158,7 @@ const Grade2Math: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 
@@ -222,7 +223,7 @@ const Grade2Math: React.FC = () => {
         return (
           <div key={question.id} className="bg-white p-6 rounded-lg shadow-md mb-6">
             <div className="flex items-start">
-              <span className="font-bold mr-2 text-gray-700">{question.id}.) </span>
+              <span className="font-bold mr-2 text-gray-700">{question.id} </span>
               <div className="flex-1">
                 <p className="font-medium mb-3 text-gray-800">{question.question}</p>
 
@@ -231,7 +232,7 @@ const Grade2Math: React.FC = () => {
                     <div key={index} className="flex flex-col">
                       <p className="mb-2 text-gray-700 font-mono text-lg">{blank}</p>
                       <input
-                        type="text"
+                type="text"
                         value={((answers[question.id] as string[]) || [])[index] || ""}
                         onChange={(e) => {
                           const currentAnswers = (answers[question.id] as string[]) || []
