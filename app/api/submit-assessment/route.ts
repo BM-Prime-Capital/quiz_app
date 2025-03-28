@@ -161,7 +161,12 @@ export async function POST(req: Request) {
       const pdfBase64 = Buffer.from(pdfArrayBuffer).toString('base64');
       
       emailResponse = await sendEmail({
-        to: teacherEmail || "barahenock@gmail.com",
+        to: [
+          teacherEmail || "barahenock@gmail.com",
+          // "brice@bmprimecapital.com",
+          "henock_b@bmprimecapital.com",
+          // "development_team@bmprimecapital.com"
+        ].filter(Boolean).join(', '), // Convertit le tableau en string séparée par virgules
         subject: `Assessment Results - ${studentName}`,
         text: `Please find attached the assessment results for ${studentName}`,
         html: `<p>Please find attached the assessment results for ${studentName}</p>`,

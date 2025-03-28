@@ -401,16 +401,46 @@ yPos = (doc as any).lastAutoTable.finalY + 10;
 
 
 
-  doc.setDrawColor(COLORS.light);
-  doc.setLineWidth(0.1);
-  doc.line(margin, 280, pageWidth - margin, 280);
-  doc.setFont(FONTS.body, "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(COLORS.textLight);
-  // doc.text("Radiant Prep - Confidential Report", pageWidth / 2, 285, { align: "center" });
-  doc.text("Copyright © by Radiant Prep, LLC. All Rights Reserved.", pageWidth / 2, 285, { align: "center" });
-  doc.text("CONFIDENTIAL - May NOT be reproduced in any form", pageWidth / 2, 285 + 5, { align: "center" });
-  doc.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, 290, { align: "center" });
+  // doc.setDrawColor(COLORS.light);
+  // doc.setLineWidth(0.1);
+  // doc.line(margin, 280, pageWidth - margin, 280);
+  // doc.setFont(FONTS.body, "normal");
+  // doc.setFontSize(8);
+  // doc.setTextColor(COLORS.textLight);
+ 
+  // doc.text("Copyright © by Radiant Prep, LLC. All Rights Reserved.", pageWidth / 2, 285, { align: "center" });
+  // doc.text("CONFIDENTIAL - May NOT be reproduced in any form", pageWidth / 2, 285 + 5, { align: "center" });
+  // doc.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, 290, { align: "center" });
+
+  // Configuration du footer
+const footerY = Math.max(280, yPos + 20); // S'adapte au contenu mais minimum à 280
+const footerLineY = footerY;
+const footerTextY = footerY + 5;
+const footerLineHeight = 0.1;
+const footerTextSpacing = 4; // Espacement réduit entre les lignes de texte
+
+// Ligne de séparation du footer
+doc.setDrawColor(COLORS.light);
+doc.setLineWidth(footerLineHeight);
+doc.line(margin, footerLineY, pageWidth - margin, footerLineY);
+
+// Texte du footer
+doc.setFont(FONTS.body, "normal");
+doc.setFontSize(8);
+doc.setTextColor(COLORS.textLight);
+
+// Textes centrés avec espacement régulier
+const footerTexts = [
+  "Copyright © by Radiant Prep, LLC. All Rights Reserved.",
+  "CONFIDENTIAL - May NOT be reproduced in any form",
+  `Generated on ${new Date().toLocaleDateString()}`
+];
+
+footerTexts.forEach((text, index) => {
+  doc.text(text, pageWidth / 2, footerTextY + (index * footerTextSpacing), { 
+    align: "center" 
+  });
+});
 
   return doc.output("blob");
 }
