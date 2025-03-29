@@ -1,7 +1,7 @@
 // app/api/submit-assessment/route.ts
 import { NextResponse } from "next/server";
 import { calculateScore } from "@/lib/score-calculation";
-import { generateProfessionalPDF } from "@/lib/report-generation";
+import { generateProfessionalPDF } from "@/lib/report-generation-large";
 import { sendEmail } from "@/lib/email-service";
 import { Question, QuestionType, QuestionResult } from "@/lib/types";
 
@@ -129,9 +129,9 @@ export async function POST(req: Request) {
       emailResponse = await sendEmail({
         to: [
           teacherEmail || "barahenock@gmail.com",
-          "brice@bmprimecapital.com",
-          "henock_b@bmprimecapital.com",
-          "development_team@bmprimecapital.com"
+          // "brice@bmprimecapital.com",
+          // "henock_b@bmprimecapital.com",
+          // "development_team@bmprimecapital.com"
         ].filter(Boolean).join(', '), // Convertit le tableau en string séparée par virgules
         subject: `Assessment Results - ${studentName}`,
         text: `Please find attached the assessment results for ${studentName}`,
