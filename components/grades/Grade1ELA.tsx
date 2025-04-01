@@ -89,66 +89,6 @@ const Grade1ELA: React.FC = () => {
     }))
   }
 
-  // const handleSubmitSuccess = async () => {
-  //   try {
-  //     const startTime = new Date(Date.now() - timeElapsed * 1000)
-  //     const endTime = new Date()
-      
-  //     // Calcul détaillé des résultats
-  //     const detailedResults = calculateDetailedResults(
-  //       quizData.grade.toString(),
-  //       quizData.subject,
-  //       studentName,
-  //       answers,
-  //       startTime,
-  //       endTime
-  //     )
-  
-  //     // Générer le rapport
-  //     // Fonction utilitaire pour comparer les réponses
-  //     const isAnswerCorrect = (question: Question, answer: any): boolean => {
-  //       if (!question.correctAnswer) return false;
-        
-  //       if (Array.isArray(answer)) {
-  //         return Array.isArray(question.correctAnswer) && 
-  //               JSON.stringify(answer) === JSON.stringify(question.correctAnswer);
-  //       }
-  //       return answer === question.correctAnswer;
-  //     };
-
-  //     // Calcul du nombre de réponses correctes
-  //     const correctCount = quizData.questions.reduce((count, question) => {
-  //       return count + (isAnswerCorrect(question, answers[question.id]) ? 1 : 0);
-  //     }, 0);
-
-  //     // Préparation des résultats
-  //     const questionResults = quizData.questions.map(question => ({
-  //       id: question.id,
-  //       correct: isAnswerCorrect(question, answers[question.id]),
-  //       studentAnswer: answers[question.id] ?? (question.type === 'fill-in-blank' ? [] : ''),
-  //       correctAnswer: question.correctAnswer ?? (question.type === 'fill-in-blank' ? [] : ''),
-  //       category: question.category || 'General'
-  //     }));
-
-  //     // Génération des catégories
-  //     const categories = questionResults.reduce((acc, result) => {
-  //       if (result.correct) {
-  //         acc.strengths.add(result.category);
-  //       } else {
-  //         acc.weaknesses.add(result.category);
-  //       }
-  //       return acc;
-  //     }, { strengths: new Set<string>(), weaknesses: new Set<string>() });
-
- 
-  
-  //     setSubmitted(true)
-  //   } catch (error) {
-  //     console.error("Submission error:", error);
-  //     alert("Une erreur est survenue lors de la soumission.");
-  //   }
-  // }
-
   const handleSubmitSuccess = async () => {
     try {
       const startTime = new Date(Date.now() - timeElapsed * 1000)

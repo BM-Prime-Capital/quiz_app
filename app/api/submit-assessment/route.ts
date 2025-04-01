@@ -1,9 +1,12 @@
 // app/api/submit-assessment/route.ts
 import { NextResponse } from "next/server";
 import { calculateScore } from "@/lib/score-calculation";
-import { generateProfessionalPDF } from "@/lib/report-generation-large";
+import { generateProfessionalPDF } from "@/lib/report-generation";
 import { sendEmail } from "@/lib/email-service";
 import { Question, QuestionType, QuestionResult } from "@/lib/types";
+
+// Déclaration de la constante totalExamTime
+const totalExamTime = 60; // Durée totale de l'examen en minutes
 
 export async function POST(req: Request) {
   console.log("Submit assessment API called");
@@ -75,18 +78,43 @@ export async function POST(req: Request) {
       : 0;
 
     // Préparation des résultats
-    const questionResults: QuestionResult[] = questions.map(question => ({
+    const questionResults = questions.map(question => ({
       id: question.id,
       correct: question.correctAnswer 
         ? JSON.stringify(answers[question.id]) === JSON.stringify(question.correctAnswer)
         : false,
-      studentAnswer: answers[question.id] ?? (question.type === QuestionType.FILL_IN_BLANK ? [] : ''),
-      correctAnswer: question.correctAnswer ?? (question.type === QuestionType.FILL_IN_BLANK ? [] : ''),
-      category: question.category || 'General'
+      category: question.category || 'General',
+      type: question.type
     }));
 
+    // Créez l'analyse des erreurs
+    const errorAnalysis = questions
+      .filter(question => {
+        const studentAnswer = answers[question.id];
+        const isCorrect = question.correctAnswer 
+          ? JSON.stringify(studentAnswer) === JSON.stringify(question.correctAnswer)
+          : false;
+        return !isCorrect;
+      })
+      .map(question => ({
+        questionId: question.id,
+        studentAnswer: answers[question.id] ?? '',
+        explanation: getExplanation(question, answers[question.id]),
+        improvementTip: getImprovementTip(question.type)
+      }));
 
-    const pdfBuffer = await generateProfessionalPDF({
+    // Calculate strength and weakness categories
+    const categories = questionResults.reduce((acc, result) => {
+      if (result.correct) {
+        acc.strengths.add(result.category);
+      } else {
+        acc.weaknesses.add(result.category);
+      }
+      return acc;
+    }, { strengths: new Set<string>(), weaknesses: new Set<string>() });
+
+    // Objet result complet
+    const result = {
       studentName,
       grade,
       subject,
@@ -95,24 +123,25 @@ export async function POST(req: Request) {
       score,
       totalQuestions: questions.length,
       timeSpent,
-      unusedTime: 0,
-      customScale: percentageScore / 20,
-      setScale: 3.4,
+      unusedTime: Math.max(0, totalExamTime - timeSpent),
+      customScale: 100,
+      setScale: 100,
       questionResults,
-      strengthCategories: Array.from(new Set(
-        questionResults.filter(r => r.correct).map(r => r.category)
-      )), // Parenthèse fermante ajoutée
-      weaknessCategories: Array.from(new Set(
-        questionResults.filter(r => !r.correct).map(r => r.category)
-      )), // Parenthèse fermante ajoutée
+      strengthCategories: Array.from(categories.strengths),
+      weaknessCategories: Array.from(categories.weaknesses),
       questions: questions.map(q => ({
         id: q.id,
         question: q.question,
         correctAnswer: q.correctAnswer ?? '',
         type: q.type,
         category: q.category || 'General'
-      }))
-    }); // Fermeture correcte de l'objet
+      })),
+      errorAnalysis,
+      previousScores: await getPreviousScores(studentName, subject)
+    };
+
+    // Génération du PDF
+    const pdfBuffer = await generateProfessionalPDF(result);
 
     // Envoi d'email avec fallback et gestion d'erreur
     let emailSent = false;
@@ -122,17 +151,13 @@ export async function POST(req: Request) {
     try {
       console.log("Attempting to send email...");
       
-      // Conversion du Blob en base64 (solution Node.js)
       const pdfArrayBuffer = await pdfBuffer.arrayBuffer();
       const pdfBase64 = Buffer.from(pdfArrayBuffer).toString('base64');
       
       emailResponse = await sendEmail({
         to: [
-          teacherEmail || "barahenock@gmail.com",
-          // "brice@bmprimecapital.com",
-          // "henock_b@bmprimecapital.com",
-          // "development_team@bmprimecapital.com"
-        ].filter(Boolean).join(', '), // Convertit le tableau en string séparée par virgules
+          teacherEmail || "barahenock@gmail.com"
+        ].filter(Boolean).join(', '),
         subject: `Assessment Results - ${studentName}`,
         text: `Please find attached the assessment results for ${studentName}`,
         html: `<p>Please find attached the assessment results for ${studentName}</p>`,
@@ -152,8 +177,6 @@ export async function POST(req: Request) {
     } catch (emailErr) {
       emailError = emailErr instanceof Error ? emailErr.message : "Unknown email error";
       console.error("Email error:", emailError);
-      
-      // Enregistrer le rapport localement si l'email échoue
       await saveReportLocally(studentName, pdfBuffer);
     }
 
@@ -184,11 +207,9 @@ export async function POST(req: Request) {
 // Fonction pour sauvegarder localement en cas d'échec d'envoi
 async function saveReportLocally(studentName: string, pdfBuffer: Blob) {
   try {
-    // Convertir en buffer Node.js
     const arrayBuffer = await pdfBuffer.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    // Écrire dans le système de fichiers (exemple avec fs)
     const fs = await import('fs/promises');
     const path = await import('path');
     
@@ -214,7 +235,41 @@ function convertToQuestionType(type: string): QuestionType {
     case "drawing": return QuestionType.DRAWING;
     case "fill-in-blank": return QuestionType.FILL_IN_BLANK;
     case "matching": return QuestionType.MATCHING;
-    case QuestionType.PATTERN : return QuestionType.PATTERN;
+    case "pattern": return QuestionType.PATTERN;
     default: return QuestionType.TEXT;
   }
+}
+
+// Fonctions helpers pour l'analyse
+function getExplanation(question: Question, studentAnswer: any): string {
+  switch(question.type) {
+    case QuestionType.MULTIPLE_CHOICE:
+      return `La réponse correcte était "${question.correctAnswer}" mais vous avez choisi "${studentAnswer}"`;
+    case QuestionType.FILL_IN_BLANK:
+      return `Le trou nécessitait "${question.correctAnswer}" mais vous avez écrit "${studentAnswer}"`;
+    default:
+      return `Réponse attendue: ${JSON.stringify(question.correctAnswer)} | Votre réponse: ${JSON.stringify(studentAnswer)}`;
+  }
+}
+
+function getImprovementTip(type: QuestionType): string {
+  const tips = {
+    [QuestionType.MULTIPLE_CHOICE]: "Lire attentivement toutes les options avant de choisir",
+    [QuestionType.FILL_IN_BLANK]: "Vérifier la grammaire et le contexte",
+    [QuestionType.TEXT]: "Structurer votre réponse en paragraphes clairs",
+    [QuestionType.MATCHING]: "Faire les associations les plus évidentes en premier",
+    [QuestionType.PATTERN]: "Chercher les répétitions et séquences logiques",
+    [QuestionType.DRAWING]: "Vérifier les proportions et les étiquettes"
+  };
+  
+  // Add a type assertion to ensure the indexing is safe
+  const tip = tips[type as keyof typeof tips];
+  return tip || "Revoyez ce concept et pratiquez davantage";
+}
+
+// Fonction pour récupérer les scores précédents
+async function getPreviousScores(studentName: string, subject: string): Promise<number[]> {
+  // Implémentez la logique pour récupérer depuis votre base de données
+  // Exemple mock:
+  return [55, 60, 65]; // Scores historiques fictifs
 }

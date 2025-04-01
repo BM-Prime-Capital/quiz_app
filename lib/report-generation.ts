@@ -2,7 +2,6 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { loadImage } from "./image-utils";
 import { QuestionType } from "./types";
-import logo from '../public/newlogo.png';
 
 // Définition des interfaces et constantes
 interface ReportOptions {
@@ -21,6 +20,7 @@ interface ReportOptions {
     id: number;
     correct: boolean;
     category: string;
+    type: QuestionType;
   }[];
   strengthCategories: string[];
   weaknessCategories: string[];
@@ -31,27 +31,66 @@ interface ReportOptions {
     type: QuestionType;
     category: string;
   }[];
+  errorAnalysis: {
+    questionId: number;
+    studentAnswer: any;
+    explanation: string;
+    improvementTip: string;
+  }[];
+  previousScores: number[];
+}
+
+interface ErrorType {
+  type: QuestionType;
+  percentage: number;
+  count: number;
 }
 
 const FONTS = {
-  title: "helvetica",
-  subtitle: "helvetica",
-  body: "helvetica",
-  bold: "helvetica"
+  title: "Montserrat",       // Moderne et élégant
+  subtitle: "OpenSans",      // Lisible et professionnel
+  body: "Roboto",           // Excellente lisibilité
+  bold: "Montserrat-Bold",   // Version bold pour titres
+  accent: "PlayfairDisplay", // Pour éléments spéciaux
+  code: "CourierNew"        // Pour textes techniques
 };
+
 
 const COLORS = {
-  primary: "#3498db",
-  secondary: "#e74c3c",
-  success: "#2ecc71",
-  warning: "#f39c12",
-  dark: "#2c3e50",
-  light: "#ecf0f1",
-  textDark: "#34495e",
-  textLight: "#7f8c8d"
+  // Couleurs principales
+  primary: "#4361ee",       // Bleu vif moderne
+  primaryLight: "#4895ef",  // Bleu plus clair
+  primaryDark: "#3a0ca3",   // Bleu foncé
+
+
+  warningDark: "#e36412", // Add a darker warning color
+  
+  // Secondaires
+  secondary: "#f72585",     // Rose vif
+  secondaryLight: "#ff70a6", 
+  secondaryDark: "#b5179e",
+  
+  // Palettes complémentaires
+  success: "#4cc9f0",       // Cyan clair
+  warning: "#f8961e",       // Orange vif
+  danger: "#ef233c",        // Rouge attrayant
+  
+  // Nuances
+  dark: "#14213d",          // Noir bleuté
+  light: "#f8f9fa",         // Blanc cassé
+  textDark: "#212529",      // Noir doux
+  textLight: "#e9ecef",     // Gris très clair
+  
+  // Accents
+  accent1: "#7209b7",       // Violet
+  accent2: "#38b000",       // Vert vif
+  accent3: "#ff9e00",       // Orange doré
+  accent4: "#00b4d8"        // Bleu turquoise
 };
 
-// Fonction utilitaire pour générer des nuances de couleur
+
+
+
 function shadeColor(color: string, percent: number): string {
   const num = parseInt(color.replace("#", ""), 16);
   const amt = Math.round(2.55 * percent);
@@ -66,175 +105,428 @@ function shadeColor(color: string, percent: number): string {
   ).toString(16).slice(1)}`;
 }
 
-// Fonction pour dessiner un conteneur de graphique avec titre
-function drawChartContainer(doc: jsPDF, x: number, y: number, width: number, height: number, title: string) {
-  // Fond légèrement gris
-  doc.setFillColor(240, 240, 240);
-  doc.rect(x, y, width, height, 'F');
-  
-  // Bordure
-  doc.setDrawColor(200, 200, 200);
-  doc.setLineWidth(0.5);
-  doc.rect(x, y, width, height, 'S');
-  
-  // Titre centré en haut
-  doc.setFontSize(12);
+function drawChartContainerNoBorder(doc: jsPDF, x: number, y: number, width: number, height: number, title: string) {
+  doc.setFontSize(10);
   doc.setFont(FONTS.bold, 'bold');
   doc.setTextColor(COLORS.dark);
-  doc.text(title, x + width/2, y + 8, { align: 'center' });
+  doc.text(title, x + width/2, y + 5, { align: 'center' });
   
   return {
-    x: x + 5,
-    y: y + 15,
-    width: width - 10,
-    height: height - 20
+    x: x,
+    y: y + 10,
+    width: width,
+    height: height - 10
   };
 }
 
-// Fonction pour dessiner un secteur de camembert
-function drawPieSlice(doc: jsPDF, x: number, y: number, radius: number, startAngle: number, endAngle: number, with3D: boolean = false) {
-  const halfAngle = (startAngle + endAngle) / 2;
-  const depth = 3; // Profondeur 3D réduite
-  
-  // Face avant
-  doc.path([
-    ['M', x, y],
-    ['L', x + radius * Math.cos(startAngle * Math.PI / 180), y + radius * Math.sin(startAngle * Math.PI / 180)],
-    ['A', radius, radius, 0, endAngle - startAngle > 180 ? 1 : 0, 1, x + radius * Math.cos(endAngle * Math.PI / 180), y + radius * Math.sin(endAngle * Math.PI / 180)],
-    ['L', x, y],
-    ['Z']
-  ], 'F');
-  
-  if (with3D) {
-    // Effet 3D sur le côté
-    const color = doc.getFillColor();
-    doc.setFillColor(shadeColor(color, -20));
-    
-    const innerRadius = radius * 0.95;
-    doc.path([
-      ['M', x + innerRadius * Math.cos(startAngle * Math.PI / 180), y + innerRadius * Math.sin(startAngle * Math.PI / 180)],
-      ['L', x + radius * Math.cos(startAngle * Math.PI / 180), y + radius * Math.sin(startAngle * Math.PI / 180)],
-      ['L', x + radius * Math.cos(halfAngle * Math.PI / 180), y + radius * Math.sin(halfAngle * Math.PI / 180) + depth],
-      ['L', x + innerRadius * Math.cos(halfAngle * Math.PI / 180), y + innerRadius * Math.sin(halfAngle * Math.PI / 180) + depth],
-      ['Z']
-    ], 'F');
-  }
-}
+function drawCenteredBarChart(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  studentScore: number,
+  averageScore: number
+) {
+  const maxValue = 100;
+  const barHeight = height * 0.7; // Réduit à 60% pour laisser de la place aux labels
+  const barWidth = width / 5; // Largeur réduite pour permettre l'espacement
+  const marginLeft = 15;
+  const labelSpace = 15; // Espace réservé pour les labels
 
-// Fonction pour dessiner un graphique en barres 3D centré
-function drawCentered3DBarChart(doc: jsPDF, x: number, y: number, width: number, height: number, studentScore: number, averageScore: number) {
-  const maxValue = Math.max(studentScore, averageScore, 100);
-  const studentHeight = (studentScore / maxValue) * (height * 0.7);
-  const averageHeight = (averageScore / maxValue) * (height * 0.7);
-  const barWidth = width / 4; // Largeur réduite pour mieux centrer
-  const depth = 3; // Profondeur 3D réduite
+  // Ajuster la hauteur de dessin pour inclure les labels
+  const drawingHeight = height - labelSpace;
 
-  // Position centrée
-  const centerX = x + width/2;
-  const studentX = centerX - barWidth - 10;
-  const averageX = centerX + 10;
+  // Positionnement des barres
+  const centerX = x + marginLeft + (width - marginLeft) / 2;
+  const studentX = centerX - barWidth - 5;
+  const averageX = centerX + 5;
 
-  // Barre de l'étudiant
+  // Hauteurs des barres
+  const studentBarHeight = (studentScore / maxValue) * barHeight;
+  const averageBarHeight = (averageScore / maxValue) * barHeight;
+
+  // Dessin des barres (dans la zone ajustée)
   doc.setFillColor(COLORS.primary);
-  // Face avant
-  doc.rect(studentX, y + height - studentHeight, barWidth, studentHeight, 'F');
-  // Face supérieure
-  doc.setFillColor(shadeColor(COLORS.primary, -20));
-  doc.rect(studentX, y + height - studentHeight, barWidth, depth, 'F');
-  // Face latérale
-  doc.setFillColor(shadeColor(COLORS.primary, -30));
-  doc.rect(studentX + barWidth, y + height - studentHeight, depth, studentHeight, 'F');
-
-  // Barre de la moyenne
+  doc.rect(studentX, y + drawingHeight - studentBarHeight, barWidth, studentBarHeight, 'F');
+  
   doc.setFillColor(COLORS.success);
-  // Face avant
-  doc.rect(averageX, y + height - averageHeight, barWidth, averageHeight, 'F');
-  // Face supérieure
-  doc.setFillColor(shadeColor(COLORS.success, -20));
-  doc.rect(averageX, y + height - averageHeight, barWidth, depth, 'F');
-  // Face latérale
-  doc.setFillColor(shadeColor(COLORS.success, -30));
-  doc.rect(averageX + barWidth, y + height - averageHeight, depth, averageHeight, 'F');
+  doc.rect(averageX, y + drawingHeight - averageBarHeight, barWidth, averageBarHeight, 'F');
 
   // Axes
-  doc.setDrawColor(COLORS.textDark);
-  doc.setLineWidth(0.3);
-  // Axe X
-  doc.line(x, y + height, x + width, y + height);
-  doc.line(x, y + height + depth, x + width, y + height + depth);
-  // Lignes de profondeur
-  doc.line(x + width, y + height, x + width, y + height + depth);
+  doc.setDrawColor(0);
+  doc.setLineWidth(0.5);
+  
   // Axe Y
-  doc.line(x, y + height/5, x, y + height);
-  doc.line(x + depth, y + height/5, x + depth, y + height);
+  const yAxisX = x + marginLeft;
+  doc.line(yAxisX, y, yAxisX, y + drawingHeight);
+  
+  // Axe X
+  doc.line(yAxisX, y + drawingHeight, x + width, y + drawingHeight);
 
-  // Graduations de l'axe Y avec texte plus petit
-  [0, 25, 50, 75, 100].forEach(val => {
-    const yPos = y + height - (val/maxValue * height * 0.7);
-    doc.line(x - 2, yPos, x, yPos);
-    doc.setFontSize(6); // Taille réduite
-    doc.text(`${val}`, x - 4, yPos + 1, { align: 'right' });
-  });
+  // Graduations
+  for (let val = 0; val <= maxValue; val += 25) {
+    const yPos = y + drawingHeight - (val / maxValue) * barHeight;
+    doc.line(yAxisX - 3, yPos, yAxisX, yPos);
+    doc.setFontSize(8);
+    doc.text(`${val}`, yAxisX - 5, yPos + 2, { align: 'right' });
+  }
 
-  // Libellés
-  doc.setFontSize(8); // Taille réduite
+  // Libellés DANS le cadre (juste sous l'axe X)
+  doc.setFontSize(9);
   doc.setTextColor(COLORS.textDark);
-  doc.text("Student", studentX + barWidth/2, y + height + depth + 4, { align: "center" });
-  doc.text("Average", averageX + barWidth/2, y + height + depth + 4, { align: "center" });
+  doc.text("Student", studentX + barWidth / 2, y + drawingHeight + 5, { align: "center" });
+  doc.text("Average", averageX + barWidth / 2, y + drawingHeight + 5, { align: "center" });
 
-  // Valeurs sur les barres
-  doc.text(`${studentScore}%`, studentX + barWidth/2, y + height - studentHeight - 3, { align: "center" });
-  doc.text(`${averageScore}%`, averageX + barWidth/2, y + height - averageHeight - 3, { align: "center" });
+  // Valeurs au-dessus des barres
+  doc.setFontSize(10);
+  doc.setFont(FONTS.bold, 'bold');
+  doc.text(`${studentScore}%`, studentX + barWidth / 2, y + drawingHeight - studentBarHeight - 5, { align: "center" });
+  doc.text(`${averageScore}%`, averageX + barWidth / 2, y + drawingHeight - averageBarHeight - 5, { align: "center" });
 }
 
-// Fonction pour dessiner un camembert amélioré
 function drawEnhancedPieChart(doc: jsPDF, x: number, y: number, size: number, correct: number, total: number) {
   const incorrect = total - correct;
   const correctPercent = (correct / total) * 100;
-  const incorrectPercent = (incorrect / total) * 100;
   const radius = size / 2;
+  const centerY = y;
+
+  // Dessin du camembert en deux passes
+  // 1. Partie correcte (verte)
+  if (correct > 0) {
+    drawPieSlice(doc, x, centerY, radius, -90, (-90 + (correctPercent / 100) * 360), COLORS.success);
+  }
   
-  // Partie correcte avec effet 3D
-  doc.setFillColor(COLORS.success);
-  drawPieSlice(doc, x, y, radius, 0, (correctPercent / 100) * 360, true);
-  
-  // Partie incorrecte
-  doc.setFillColor(COLORS.secondary);
-  drawPieSlice(doc, x, y, radius, (correctPercent / 100) * 360, 360, true);
-  
-  // Cercle central pour effet donut
+  // 2. Partie incorrecte (rouge)
+  if (incorrect > 0) {
+    drawPieSlice(doc, x, centerY, radius, (-90 + (correctPercent / 100) * 360), (-90 + 360), COLORS.secondary);
+  }
+
+  // Cercle blanc central
   doc.setFillColor(255, 255, 255);
-  doc.circle(x, y, radius * 0.4, 'F');
+  doc.circle(x, centerY, radius * 0.4, 'F');
   
-  // Texte central
+  // Pourcentage au centre
   doc.setFontSize(10);
   doc.setFont(FONTS.bold, 'bold');
   doc.setTextColor(COLORS.textDark);
-  doc.text(`${correctPercent.toFixed(0)}%`, x, y + 1, { align: 'center' });
+  doc.text(`${correctPercent.toFixed(0)}%`, x, centerY + 2, { align: 'center' });
+
+  // Légende COMPACTE et bien positionnée
+  const legendY = centerY + radius + 5;
+  const legendX = x - radius * 0.9; // Décalage vers la gauche
   
-  // Légende
-  const legendX = x + radius + 5;
-  const legendY = y - radius/2;
-  
-  // Correct
+  // Style commun pour les légendes
+  doc.setFontSize(7);
+  const boxSize = 5;
+  const textOffset = 8;
+  const lineHeight = 8;
+
+  // Légende "Correct"
   doc.setFillColor(COLORS.success);
-  doc.rect(legendX, legendY, 8, 8, 'F');
-  doc.setFontSize(8);
-  doc.setTextColor(COLORS.textDark);
-  doc.text(`Correct: ${correct} (${correctPercent.toFixed(1)}%)`, legendX + 10, legendY + 5);
-  
-  // Incorrect
+  doc.rect(legendX, legendY, boxSize, boxSize, 'F');
+  doc.text(`Correct: ${correct}`, legendX + textOffset, legendY + boxSize/2 + 1);
+
+  // Légende "Incorrect" (plus bas)
   doc.setFillColor(COLORS.secondary);
-  doc.rect(legendX, legendY + 15, 8, 8, 'F');
-  doc.text(`Incorrect: ${incorrect} (${incorrectPercent.toFixed(1)}%)`, legendX + 10, legendY + 20);
-  
-  // Ombre subtile
-  doc.setDrawColor(180, 180, 180);
-  doc.setLineWidth(0.1);
-  doc.circle(x + 0.5, y + 0.5, radius, 'S');
+  doc.rect(legendX, legendY + lineHeight, boxSize, boxSize, 'F');
+  doc.text(`Incorrect: ${incorrect}`, legendX + textOffset, legendY + lineHeight + boxSize/2 + 1);
+
+  // Contour du cercle
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.2);
+  doc.circle(x, centerY, radius, 'S');
 }
 
-// Fonction principale pour générer le PDF
+// Fonction helper pour dessiner les portions de camembert
+function drawPieSlice(doc: jsPDF, x: number, y: number, radius: number, startAngle: number, endAngle: number, color: string) {
+  doc.setFillColor(color);
+  const segments = Math.max(10, Math.ceil((endAngle - startAngle) / 5));
+  const angleStep = (endAngle - startAngle) / segments;
+  
+  doc.moveTo(x, y);
+  for (let i = 0; i <= segments; i++) {
+    const angle = (startAngle + i * angleStep) * (Math.PI / 180);
+    doc.lineTo(x + radius * Math.cos(angle), y + radius * Math.sin(angle));
+  }
+  doc.lineTo(x, y);
+  doc.fill();
+}
+
+// Fonction extraite pour dessiner les portions
+// function drawPieSlice(doc: jsPDF, x: number, y: number, radius: number, startAngle: number, endAngle: number, color: string) {
+//   doc.setFillColor(color);
+//   const segments = Math.ceil((endAngle - startAngle) / 5);
+//   const angleStep = (endAngle - startAngle) / segments;
+  
+//   doc.moveTo(x, y);
+//   for (let i = 0; i <= segments; i++) {
+//     const angle = (startAngle + i * angleStep) * (Math.PI / 180);
+//     doc.lineTo(x + radius * Math.cos(angle), y + radius * Math.sin(angle));
+//   }
+//   doc.lineTo(x, y);
+//   doc.fill();
+// }
+
+
+function analyzeQuestionTypes(questions: {type: QuestionType, correct: boolean}[]) {
+  const typeStats: Record<QuestionType, {correct: number, total: number}> = {} as any;
+  
+  questions.forEach(q => {
+    if (!typeStats[q.type]) {
+      typeStats[q.type] = {correct: 0, total: 0};
+    }
+    typeStats[q.type].total++;
+    if (q.correct) typeStats[q.type].correct++;
+  });
+  
+  return Object.entries(typeStats).map(([type, stats]) => ({
+    type: type as QuestionType,
+    percentage: (stats.correct / stats.total) * 100,
+    count: stats.total
+  }));
+}
+
+// Fonction pour générer des conseils par type de question
+function generateTypeSpecificTips(questionType: QuestionType): string[] {
+  const tips: Record<QuestionType, string[]> = {
+    [QuestionType.MULTIPLE_CHOICE]: [
+      "Read all options before answering",
+      "Eliminate clearly incorrect choices first",
+      "Watch for absolute words like 'always' or 'never'"
+    ],
+    [QuestionType.TEXT]: [
+      "Structure your answer in clear paragraphs",
+      "Use concrete examples when possible",
+      "Proofread for grammar mistakes"
+    ],
+    [QuestionType.FILL_IN_BLANK]: [
+      "Ensure the answer is grammatically correct",
+      "Pay attention to singular/plural forms",
+      "If unsure, try to guess the meaning of the sentence"
+    ],
+    [QuestionType.MATCHING]: [
+      "Start with the most obvious pairs first",
+      "Eliminate options as you go",
+      "Verify each item is used only once"
+    ],
+    [QuestionType.FRACTION]: [
+      "Always simplify fractions",
+      "Check for common denominators",
+      "For comparisons, convert to same denominator"
+    ],
+    [QuestionType.PATTERN]: [
+      "Look for numerical or geometric sequences",
+      "Check for color/shape alternations",
+      "Count elements to find patterns"
+    ],
+    [QuestionType.CLOCK]: [
+      "Draw the time if needed",
+      "Pay attention to AM/PM",
+      "For duration problems, use a timeline"
+    ],
+    [QuestionType.COMPARISON]: [
+      "Identify the comparison criteria",
+      "For numbers, check the units",
+      "Rank from smallest to largest when possible"
+    ],
+    [QuestionType.IMAGE_CHOICE]: [
+      "Examine each image carefully",
+      "Look for subtle differences",
+      "Eliminate least likely options"
+    ],
+    [QuestionType.WRITING]: [
+      "Plan your answer before writing",
+      "Vary vocabulary and sentence structure",
+      "Proofread for errors"
+    ],
+    [QuestionType.FILL_IN]: [
+      "Ensure the answer logically completes the sentence",
+      "Pay attention to verb conjugation",
+      "Adapt the answer to the context"
+    ],
+    [QuestionType.WORD_SORT]: [
+      "Identify categories first",
+      "Look for grammatical clues",
+      "Check spelling of words"
+    ],
+    [QuestionType.GRAMMAR]: [
+      "Reread the complete sentence with your answer",
+      "Identify the verb tense",
+      "Check subject-verb agreement"
+    ],
+    [QuestionType.DRAWING]: [
+      "Use all the provided space",
+      "Label important parts",
+      "Check proportions"
+    ]
+  };
+  
+  return tips[questionType] || [
+    "Read the question carefully",
+    "Double-check your answer",
+    "Manage your time effectively"
+  ];
+}
+
+function drawErrorAnalysis(doc: jsPDF, yPos: number, margin: number, contentWidth: number, 
+                         errorAnalysis: ReportOptions['errorAnalysis'], 
+                         questions: ReportOptions['questions']) {
+  let currentY = yPos;
+  
+  doc.setFontSize(12);
+  doc.setFont(FONTS.bold, "bold");
+  doc.setTextColor(COLORS.secondary);
+  doc.text("DETAILED ERROR ANALYSIS:", margin, currentY);
+  currentY += 10;
+
+  const errorTypes = analyzeQuestionTypes(
+    errorAnalysis.map(e => {
+      const q = questions.find(q => q.id === e.questionId)!;
+      return {type: q.type, correct: false};
+    })
+  );
+
+  // Graphique des erreurs par type
+  const chartWidth = contentWidth;
+  const chartHeight = 60;
+  
+  // Vérifier l'espace avant d'ajouter le graphique
+  if (currentY + chartHeight > doc.internal.pageSize.getHeight() - margin) {
+    doc.addPage();
+    currentY = margin;
+    addSecondaryHeader(doc, margin, doc.internal.pageSize.getWidth(), "", "");
+  }
+  
+
+  errorAnalysis.forEach((error, index) => {
+    const question = questions.find(q => q.id === error.questionId);
+    if (!question) return;
+
+    // Vérifier l'espace avant d'ajouter une nouvelle erreur
+    if (currentY + 60 > doc.internal.pageSize.getHeight() - margin) {
+      doc.addPage();
+      currentY = margin;
+      addSecondaryHeader(doc, margin, doc.internal.pageSize.getWidth(), "", "");
+    }
+
+    doc.setFillColor(245, 245, 250);
+    doc.rect(margin, currentY, contentWidth, 25, 'F');
+    doc.setDrawColor(220, 220, 230);
+    doc.rect(margin, currentY, contentWidth, 25, 'S');
+
+    doc.setFontSize(9);
+    doc.setTextColor(COLORS.textDark);
+    
+    doc.setFont(FONTS.bold, 'bold');
+    doc.text(`Q${index + 1} (${question.type}):`, margin + 5, currentY + 7);
+    doc.setFont(FONTS.body, 'normal');
+    doc.text(question.question.substring(0, 50) + (question.question.length > 50 ? "..." : ""), margin + 25, currentY + 7);
+    
+    doc.text(`Your answer: ${error.studentAnswer}`, margin + 5, currentY + 14);
+    doc.text(`Correct answer: ${question.correctAnswer}`, margin + 5, currentY + 19);
+    
+    currentY += 27;
+    
+    // Conseils d'amélioration
+    const tips = generateTypeSpecificTips(question.type);
+    
+    // Vérifier l'espace pour les conseils
+    if (currentY + 15 + (tips.length * 5) > doc.internal.pageSize.getHeight() - margin) {
+      doc.addPage();
+      currentY = margin;
+      addSecondaryHeader(doc, margin, doc.internal.pageSize.getWidth(), "", "");
+    }
+
+    doc.setFillColor(255, 253, 235);
+    doc.rect(margin, currentY, contentWidth, 10 + (tips.length * 5), 'F');
+    doc.setDrawColor(255, 235, 150);
+    doc.rect(margin, currentY, contentWidth, 10 + (tips.length * 5), 'S');
+    
+    doc.setFont(FONTS.bold, 'bold');
+    doc.text(`Improvement strategies (${question.type}):`, margin + 5, currentY + 7);
+    
+    tips.forEach((tip, i) => {
+      doc.setFont(FONTS.body, 'normal');
+      doc.text(`• ${tip}`, margin + 10, currentY + 12 + (i * 5));
+    });
+    
+    currentY += 15 + (tips.length * 5);
+    
+    // Séparateur entre les erreurs
+    if (index < errorAnalysis.length - 1) {
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.2);
+      doc.line(margin, currentY, margin + contentWidth, currentY);
+      currentY += 10;
+    }
+  });
+
+  return currentY;
+}
+
+// Fonction pour ajouter un en-tête minimal sur les pages suivantes
+function addSecondaryHeader(
+  doc: jsPDF,
+  margin: number,
+  pageWidth: number,
+  studentName: string,
+  subject: string
+) {
+  doc.setFontSize(12);
+  doc.setTextColor(COLORS.dark);
+  doc.text(`Student: ${studentName} - ${subject}`, margin, margin - 10);
+  doc.setDrawColor(COLORS.dark);
+  doc.setLineWidth(0.5);
+  doc.line(margin, margin - 5, pageWidth - margin, margin - 5);
+}
+
+function drawActionPlan(doc: jsPDF, yPos: number, margin: number, contentWidth: number, weaknesses: string[], subject: string) {
+  let currentY = yPos;
+  
+  doc.setFontSize(12);
+  doc.setFont(FONTS.bold, "bold");
+  doc.setTextColor(COLORS.primary);
+  doc.text("PERSONALIZED ACTION PLAN", margin, currentY);
+  currentY += 10;
+
+  // Section 1: Focus Areas
+  doc.setFontSize(10);
+  doc.setFont(FONTS.bold, "bold");
+  doc.setTextColor(COLORS.dark);
+  doc.text("Priority Improvement Areas:", margin, currentY);
+  currentY += 7;
+
+  weaknesses.forEach((weakness, i) => {
+    doc.setFont(FONTS.body, "normal");
+    doc.text(`• ${weakness}`, margin + 5, currentY);
+    currentY += 5;
+  });
+
+  currentY += 10;
+
+  // Section 2: Recommended Resources
+  doc.setFont(FONTS.bold, "bold");
+  doc.text("Recommended Resources:", margin, currentY);
+  currentY += 7;
+
+  const resources = {
+    math: ["Khan Academy", "IXL Math"],
+    reading: ["CommonLit", "Newsela"],
+    science: ["CK-12", "PhET"]
+  };
+
+  const subjectResources = resources[subject.toLowerCase() as keyof typeof resources] || [];
+  subjectResources.forEach(resource => {
+    doc.setFont(FONTS.body, "normal");
+    doc.text(`→ ${resource}`, margin + 5, currentY);
+    currentY += 5;
+  });
+
+  return currentY;
+}
+
+
 export async function generateProfessionalPDF(result: ReportOptions): Promise<Blob> {
   const doc = new jsPDF({
     orientation: "portrait",
@@ -242,246 +534,269 @@ export async function generateProfessionalPDF(result: ReportOptions): Promise<Bl
     format: "a4",
   });
 
+   // =============================================
+  // AJOUT DES POLICES PERSONNALISÉES (à mettre juste après la création du doc)
+  // =============================================
+  try {
+    // Chargez les fichiers de police (vous devrez les avoir dans votre projet)
+    const montserratRegular = await fetch('/fonts/Montserrat-Regular.ttf').then(r => r.arrayBuffer());
+    const montserratBold = await fetch('/fonts/Montserrat-Bold.ttf').then(r => r.arrayBuffer());
+    const openSansRegular = await fetch('/fonts/OpenSans-Regular.ttf').then(r => r.arrayBuffer());
+    const playfairDisplay = await fetch('/fonts/PlayfairDisplay-Regular.ttf').then(r => r.arrayBuffer());
+    const robotoRegular = await fetch('/fonts/Roboto-Regular.ttf').then(r => r.arrayBuffer());
+
+    // Ajoutez les polices au document
+    doc.addFileToVFS('Montserrat-Regular.ttf', arrayBufferToBase64(montserratRegular));
+    doc.addFileToVFS('Montserrat-Bold.ttf', arrayBufferToBase64(montserratBold));
+    doc.addFileToVFS('OpenSans-Regular.ttf', arrayBufferToBase64(openSansRegular));
+    doc.addFileToVFS('PlayfairDisplay-Regular.ttf', arrayBufferToBase64(playfairDisplay));
+    doc.addFileToVFS('Roboto-Regular.ttf', arrayBufferToBase64(robotoRegular));
+
+    doc.addFont('Montserrat-Regular.ttf', 'Montserrat', 'normal');
+    doc.addFont('Montserrat-Bold.ttf', 'Montserrat-Bold', 'bold');
+    doc.addFont('OpenSans-Regular.ttf', 'OpenSans', 'normal');
+    doc.addFont('PlayfairDisplay-Regular.ttf', 'PlayfairDisplay', 'normal');
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+  } catch (e) {
+    console.warn("Failed to load custom fonts, using defaults", e);
+  }
+
   const margin = 20;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const contentWidth = pageWidth - 2 * margin;
   let yPos = margin;
 
-  // En-tête avec logo, titre et informations de contact
+  // En-tête avec logo et informations
   try {
     const logoData = await loadImage('newlogo.png');
-    const logoWidth = 30;
-    const logoHeight = 30;
-    doc.addImage(logoData, 'PNG', margin, yPos, logoWidth, logoHeight);
+    doc.addImage(logoData, 'PNG', margin, yPos, 30, 30);
 
-    // Titre CompleMetrics centré
+    // Positionnement du texte pour le nom de la société
     doc.setFontSize(24);
     const centerY = yPos + 15;
     const textWidth = doc.getTextWidth("CompleMetrics");
     const centerX = (pageWidth - textWidth) / 2;
-    
+
     doc.setTextColor(128, 0, 128);
     doc.text("Comple", centerX, centerY);
     doc.setTextColor(0, 128, 0);
     doc.text("Metrics", centerX + doc.getTextWidth("Comple") - 1, centerY);
 
-    // Sous-titre
+    // Sous-titre centré
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
     const subtitle = "Complete Measurement of Educational Metrics";
-    const subtitleWidth = doc.getTextWidth(subtitle);
-    doc.text(subtitle, (pageWidth - subtitleWidth) / 2, centerY + 10);
+    doc.text(subtitle, (pageWidth - doc.getTextWidth(subtitle)) / 2, centerY + 10);
 
-    // Informations de contact à droite
-    doc.setFontSize(10);
+    // Informations à droite (adresse et contact)
     const rightEdge = pageWidth - margin;
-    doc.text("Radiant Prep, LLC", rightEdge, yPos + 5, { align: "right" });
-    doc.text("42-20 Broadway", rightEdge, yPos + 10, { align: "right" });
-    doc.text("Astoria, NY 11103", rightEdge, yPos + 15, { align: "right" });
-    doc.text("Learn@radiantprep.com", rightEdge, yPos + 20, { align: "right" });
-    doc.text("(347) 551-0888", rightEdge, yPos + 25, { align: "right" });
-  
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    const contactInfo = [
+      "Radiant Prep, LLC",
+      "42-20 Broadway",
+      "Astoria, NY 11103",
+      "Learn@radiantprep.com",
+      "(347) 551-0888"
+    ];
+
+    contactInfo.forEach((line, i) => {
+      doc.text(line, rightEdge, yPos + 5 + (i * 5), { align: "right" });
+    });
   } catch (e) {
     console.error("Failed to load logo:", e);
-    // Fallback sans logo
-    doc.setFontSize(24);
-    const textY = yPos + 20;
-    const startX = (pageWidth - doc.getTextWidth("CompleMetrics")) / 2;
-    doc.setTextColor(128, 0, 128);
-    doc.text("Comple", startX, textY);
-    doc.setTextColor(0, 128, 0);
-    doc.text("Metrics", startX + doc.getTextWidth("Comple") - 1, textY);
+    // Fallback si le logo ne charge pas
   }
+  // Après la partie logo/en-tête (ligne ~200)
+yPos += 35; // Réduire cet espacement initial
+
+// Section SCHOLAR et GRADE - version compacte
+const scholarY = yPos;
+const infoBoxHeight = 10; // Hauteur réduite des boîtes d'information
+
+// Calculer la largeur totale disponible entre les marges
+const totalWidth = pageWidth - 2 * margin;
+
+// "SCHOLAR" label - largeur ajustée
+const scholarLabelWidth = 35;
+doc.setFillColor(0, 51, 102);
+doc.rect(margin, scholarY, scholarLabelWidth, infoBoxHeight, "F");
+doc.setTextColor(255, 255, 255);
+doc.setFontSize(9);
+doc.text("SCHOLAR", margin + 5, scholarY + 7); // Retirer le ":" pour gagner de l'espace
+
+// Nom étudiant - largeur calculée dynamiquement
+const nameWidth = totalWidth * 0.5; // Prend 50% de l'espace disponible
+doc.setFillColor(230, 230, 230);
+doc.rect(margin + scholarLabelWidth, scholarY, nameWidth, infoBoxHeight, "F");
+doc.setTextColor(0, 0, 0);
+doc.text(result.studentName, margin + scholarLabelWidth + 5, scholarY + 7);
+
+// "GRADE" label - largeur ajustée
+const gradeLabelWidth = 30;
+doc.setFillColor(0, 51, 102);
+doc.rect(margin + scholarLabelWidth + nameWidth, scholarY, gradeLabelWidth, infoBoxHeight, "F");
+doc.setTextColor(255, 255, 255);
+doc.text("GRADE", margin + scholarLabelWidth + nameWidth + 5, scholarY + 7);
+
+// Grade - largeur calculée pour remplir jusqu'à la marge droite
+const gradeValueWidth = totalWidth - scholarLabelWidth - nameWidth - gradeLabelWidth;
+doc.setFillColor(230, 230, 230);
+doc.rect(margin + scholarLabelWidth + nameWidth + gradeLabelWidth, scholarY, gradeValueWidth, infoBoxHeight, "F");
+doc.setTextColor(0, 0, 0);
+doc.text(result.grade, margin + scholarLabelWidth + nameWidth + gradeLabelWidth + (gradeValueWidth/2), scholarY + 7, { align: 'center' });
+
+yPos += infoBoxHeight + 5;
+
+// Informations évaluation - version compacte alignée à gauche
+doc.setFontSize(9); // Taille réduite
+const assessmentText = `Assessment: Radiant PACED™ - Grade ${result.grade} ${result.subject}`;
+const dateText = `Date: ${result.date.toLocaleDateString()}`;
+
+// Alignement à gauche avec la marge
+doc.text(assessmentText, margin, yPos);
+doc.text(dateText, margin, yPos + 5);
+
+yPos += 15; // Espacement avant la section suivante
+
+
+
+// =============================================
+// PERFORMANCE ANALYSIS - Graphiques
+// =============================================
+
+doc.setFontSize(16);
+doc.setFont(FONTS.accent, 'bold'); // Utilise PlayfairDisplay en bold
+doc.setTextColor(COLORS.primary);   // Violet moderne
+
+const title = "Performance Analysis";
+const titleWidth = doc.getTextWidth(title);
+doc.text(title, margin, yPos);
+
+// Soulignement stylisé
+doc.setDrawColor(COLORS.primaryDark); // Rose vif
+doc.setLineWidth(0.8);
+doc.line(margin, yPos + 3, margin + titleWidth, yPos + 3);
+
+yPos += 10; // Espacement accru
+
+const chartHeight = 70;
+const gapBetweenCharts = 10; // Espace entre les deux graphiques
+
+// Calcul des largeurs pour respecter les marges
+const totalAvailableWidth = contentWidth - gapBetweenCharts;
+const chartWidth = totalAvailableWidth / 2;
+
+// Vérifier l'espace disponible
+if (yPos + chartHeight > pageHeight - margin - 30) { // Marge de sécurité
+    doc.addPage();
+    yPos = margin;
+    addSecondaryHeader(doc, margin, pageWidth, result.studentName, result.subject);
+}
+
+// Styles pour les cadres
+const frameColor: [number, number, number] = [0, 0, 0];
+const frameWidth = 0.5; // Ligne plus fine
+
+// SCORE COMPARISON - Graphique à gauche
+const leftChartX = margin;
+const chartY = yPos + 5; // Position verticale ajustée
+
+// Cadre gauche
+doc.setDrawColor(...frameColor);
+doc.setLineWidth(frameWidth);
+doc.rect(leftChartX, chartY - 5, chartWidth, chartHeight + 10);
+
+// Titre du graphique gauche
+// doc.setFontSize(10);
+// doc.setTextColor(COLORS.dark);
+// doc.text("SCORE COMPARISON", leftChartX + chartWidth / 2, chartY - 8, { align: 'center' });
+
+// Dessin du graphique
+drawCenteredBarChart(doc, leftChartX, chartY, chartWidth, chartHeight, 
+                    result.percentageScore, 75);
+
+// QUESTION RESULTS - Graphique à droite
+const rightChartX = margin + chartWidth + gapBetweenCharts;
+
+// Cadre droit
+doc.setDrawColor(...frameColor);
+doc.setLineWidth(frameWidth);
+doc.rect(rightChartX, chartY - 5, chartWidth, chartHeight + 10);
+
+// Titre du graphique droit
+// doc.text("QUESTION RESULTS", rightChartX + chartWidth / 2, chartY - 8, { align: 'center' });
+
+// Dessin du camembert
+const correctCount = result.questionResults.filter(q => q.correct).length;
+drawEnhancedPieChart(doc, 
+                    rightChartX + chartWidth / 2, 
+                    chartY + chartHeight / 2, 
+                    Math.min(chartWidth, chartHeight) * 0.55, // Taille légèrement réduite
+                    correctCount, 
+                    result.totalQuestions);
+
+// Légendes sous les graphiques
+const legendY = chartY + chartHeight + 10;
+doc.setFontSize(8);
+doc.setTextColor(COLORS.textDark);
+doc.text("Score Comparison", leftChartX + chartWidth / 2, legendY, { align: 'center' });
+doc.text("Question Results", rightChartX + chartWidth / 2, legendY, { align: 'center' });
+
+
+yPos += chartHeight + 30; // Espacement avant la section suivante
+
+
+// FIN MODIFICATIONS
+
+// =============================================
+// DETAILED PERFORMANCE BY CATEGORY - VERSION CORRIGÉE
+// =============================================
+if (result.questionResults) {
+  if (yPos > pageHeight - 100) {
+    doc.addPage();
+    yPos = margin;
+    addSecondaryHeader(doc, margin, pageWidth, result.studentName, result.subject);
+  }
+
+  // Titre stylisé
+  doc.setFontSize(16);
+  doc.setFont(FONTS.accent, 'bold');
+  doc.setTextColor(COLORS.primary);
   
-  yPos += 40;
+  const title = "Detailed Performance by Category";
+  const titleWidth = doc.getTextWidth(title);
+  doc.text(title, margin, yPos);
   
-  // Ligne de séparation
-  doc.setDrawColor(COLORS.dark);
-  doc.setLineWidth(4);
-  doc.line(margin, yPos, pageWidth - margin, yPos);
-  yPos += 10;
-
-  // Section SCHOLAR et GRADE
-  const scholarY = yPos + 10;
-  doc.setFillColor(0, 0, 0);
-  doc.rect(margin, scholarY, 30, 10, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.text("SCHOLAR:", margin + 2, scholarY + 7);
-
-  doc.setFillColor(200, 200, 200);
-  doc.rect(margin + 30, scholarY, 80, 10, "F");
-  doc.setTextColor(0, 0, 0);
-  doc.text(result.studentName, margin + 32, scholarY + 7);
-
-  // Grade
-  doc.setFillColor(200, 200, 200);
-  doc.rect(margin + 110, scholarY, 50, 10, "F");
-  doc.text(`Grade: ${result.grade}`, margin + 112, scholarY + 7);
-
-  yPos = scholarY + 20;
-
-  // Informations sur l'évaluation
-  doc.setFontSize(10);
-  const assessmentText = `Assessment: Radiant PACED™ Assessments - Grade ${result.grade} ${result.subject.toUpperCase()}`;
-  const dateText = `Date Administered: ${result.date.toLocaleDateString()}`;
-  const centerX = pageWidth / 2;
-
-  doc.text(assessmentText, centerX - doc.getTextWidth(assessmentText)/2, yPos);
-  doc.text(dateText, centerX - doc.getTextWidth(dateText)/2, yPos + 5);
+  // Soulignement
+  doc.setDrawColor(COLORS.primaryDark);
+  doc.setLineWidth(0.8);
+  doc.line(margin, yPos + 3, margin + titleWidth, yPos + 3);
+  
   yPos += 15;
 
-  // Score
-  doc.setFontSize(14);
-  doc.setFont(FONTS.bold, "bold");
-  const scoreLabel = "SCORE:";
-  doc.text(scoreLabel, centerX - doc.getTextWidth(scoreLabel)/2, yPos + 10);
-  yPos += 5;
-
-  // Pourcentage du score
-  doc.setFontSize(36);
-  doc.setTextColor(COLORS.primary);
-  const scoreText = `${result.percentageScore}%`;
-  doc.text(scoreText, centerX - doc.getTextWidth(scoreText)/2, yPos + 20);
-  doc.setTextColor(0, 0, 0);
-  yPos += 40;
-
-  // Section PERFORMANCE ANALYSIS avec graphiques
-  doc.setFontSize(14);
-  doc.setFont(FONTS.bold, 'bold');
-  doc.setTextColor(COLORS.dark);
-  const performanceTitle = "PERFORMANCE ANALYSIS";
-  doc.text(performanceTitle, centerX - doc.getTextWidth(performanceTitle)/2, yPos);
-  yPos += 10;
-  
-
-  // Conteneur pour les graphiques
-  const chartsContainerHeight = 80;
-  const chartSpacing = 10;
-
-  // Graphique en barres 3D centré
-  const barChartContainer = drawChartContainer(
-    doc, 
-    margin, 
-    yPos, 
-    contentWidth, 
-    chartsContainerHeight,
-    "SCORE COMPARISON"
-  );
-  drawCentered3DBarChart(
-    doc, 
-    barChartContainer.x, 
-    barChartContainer.y + 5, 
-    barChartContainer.width, 
-    barChartContainer.height - 10,
-    result.percentageScore, 
-    75
+  // Calcul des performances pour TOUTES les questions
+  const performanceTypes = analyzeQuestionTypes(
+    result.questionResults.map(qr => ({
+      type: qr.type,
+      correct: qr.correct
+    }))
   );
 
-  yPos += chartsContainerHeight + 15;
-
-  // Vérifier si on a assez d'espace pour le pie chart avant de le dessiner
-  const spaceNeeded = chartsContainerHeight + 50; // Estimation de l'espace nécessaire
-  if (yPos + spaceNeeded > pageHeight - margin - 20) { // 20mm pour le footer
-    // Pas assez d'espace, on passe à une nouvelle page
-    doc.addPage();
-    yPos = margin;
-  }
-
-  // Graphique camembert en dessous
-  const pieChartContainer = drawChartContainer(
-    doc, 
-    margin, 
-    yPos, 
-    contentWidth, 
-    chartsContainerHeight,
-    "QUESTION RESULTS"
-  );
-  const correctCount = result.questionResults.filter(q => q.correct).length;
-  drawEnhancedPieChart(
-    doc, 
-    pieChartContainer.x + pieChartContainer.width/2, 
-    pieChartContainer.y + pieChartContainer.height/2, 
-    Math.min(pieChartContainer.width, pieChartContainer.height) * 0.6,
-    correctCount, 
-    result.totalQuestions
-  );
-
-  yPos += chartsContainerHeight + 15;
-
-  // Vérifier l'espace pour les sections suivantes
-  const nextSectionsHeight = 100; // Estimation approximative
-  if (yPos + nextSectionsHeight > pageHeight - margin - 20) {
-    doc.addPage();
-    yPos = margin;
-  }
-
-  // Sections Correct/Incorrect
-  const boxHeight = 10;
-  const boxWidth = 80;
-  const boxSpacing = 10;
-
-  // Correct (vert)
-  doc.setFillColor(0, 128, 0);
-  doc.rect(margin, yPos, boxWidth, boxHeight, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
-  doc.text("Correct", margin + boxWidth/2, yPos + 7, { align: "center" });
-
-  // Incorrect (rouge)
-  doc.setFillColor(255, 0, 0);
-  doc.rect(margin + boxWidth + boxSpacing, yPos, boxWidth, boxHeight, "F");
-  doc.text("Incorrect", margin + boxWidth + boxSpacing + boxWidth/2, yPos + 7, { align: "center" });
-
-  yPos += boxHeight + 10;
-
-  // Liste des points forts et faibles
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(10);
-  const strengthsY = yPos;
-
-  result.strengthCategories.forEach((category, index) => {
-    doc.text(`${index + 1}. ${category}`, margin, strengthsY + index * 5);
-  });
-
-  result.weaknessCategories.forEach((category, index) => {
-    doc.text(`${index + 1}. ${category}`, margin + boxWidth + boxSpacing, strengthsY + index * 5);
-  });
-
-  const maxListHeight = Math.max(
-    result.strengthCategories.length * 5,
-    result.weaknessCategories.length * 5
-  );
-  yPos = strengthsY + maxListHeight + 10;
-
-  // Tableau détaillé des performances par catégorie
-  yPos += 10;
-  doc.setFontSize(12);
-  doc.setFont(FONTS.bold, "bold");
-  doc.text("DETAILED PERFORMANCE BY CATEGORY:", margin, yPos);
-  yPos += 10;
-
-  const categoryData = result.questionResults.reduce((acc, q) => {
-    const category = q.category || 'Uncategorized';
-    if (!acc[category]) {
-      acc[category] = { correct: 0, total: 0 };
-    }
-    acc[category].total++;
-    if (q.correct) acc[category].correct++;
-    return acc;
-  }, {} as Record<string, { correct: number; total: number }>);
-
-  const tableData = Object.entries(categoryData).map(([category, {correct, total}]) => [
-    category,
-    `${correct}/${total}`,
-    `${Math.round((correct/total)*100)}%`,
-    correct/total > 0.7 ? "✓ Strong" : correct/total > 0.5 ? "↔ Needs Work" : "✗ Weak"
-  ]);
-
+  // Tableau des performances COMPLÈTES
   autoTable(doc, {
     startY: yPos,
-    head: [['Category', 'Score', 'Percentage', 'Performance']],
-    body: tableData,
+    head: [['Question Type', 'Success Rate', 'Correct', 'Total', 'Tips']],
+    body: performanceTypes.map(t => [
+      t.type,
+      `${t.percentage.toFixed(1)}%`,
+      t.count * t.percentage / 100, // Nombre de bonnes réponses
+      t.count,                      // Total des questions
+      generateTypeSpecificTips(t.type)[0]
+    ]),
+    margin: { left: margin },
+    tableWidth: contentWidth,
     styles: {
       font: FONTS.body,
       fontSize: 9,
@@ -494,50 +809,177 @@ export async function generateProfessionalPDF(result: ReportOptions): Promise<Bl
       fontStyle: 'bold'
     },
     columnStyles: {
-      0: { cellWidth: 60 },
-      3: { 
-        cellWidth: 30,
-        halign: 'center',
-        fontStyle: 'bold'
-      }
-    },
-    margin: { left: margin },
-    tableWidth: contentWidth
+      0: { cellWidth: 40 },
+      1: { cellWidth: 30 },
+      2: { cellWidth: 20 },
+      3: { cellWidth: 20 },
+      4: { cellWidth: 60, fontStyle: 'italic' }
+    }
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 10;
+  yPos = (doc as any).lastAutoTable.finalY + 15;
+}
 
-  // Analyse générale
-  doc.setFontSize(12);
-  doc.setFont(FONTS.bold, "bold");
-  doc.text("GENERAL ANALYSIS / FOCUS AREAS:", margin, yPos);
-  yPos += 7;
+// =============================================
+// GENERAL ANALYSIS & FOCUS AREAS - VERSION PERSONNALISÉE
+// =============================================
+yPos += 30;
 
-  doc.setFontSize(10);
-  doc.setFont(FONTS.body, "normal");
-  let analysis = "";
-  if (result.percentageScore < 30) {
-    analysis = `Our data indicates ${result.studentName} requires critical interventions in ${result.subject.toUpperCase()}. The results show performance significantly below typical peer metrics. We recommend a structured foundation in ${result.subject === "math" ? "mathematics" : "literacy"}.`;
-  } else if (result.percentageScore < 70) {
-    analysis = `${result.studentName} shows mixed results in ${result.subject.toUpperCase()}. Some areas are strong while others need improvement. We recommend targeted practice in the weak areas identified above.`;
-  } else {
-    analysis = `${result.studentName} demonstrates strong proficiency in ${result.subject.toUpperCase()}. To continue growth, we recommend enrichment activities that build on these strengths.`;
+if (result.weaknessCategories?.length > 0) {
+  // Vérification espace disponible
+  if (yPos > pageHeight - margin - 150) {
+    doc.addPage();
+    yPos = margin;
+    addSecondaryHeader(doc, margin, pageWidth, result.studentName, result.subject);
   }
 
-  const analysisLines = doc.splitTextToSize(analysis, contentWidth);
-  doc.text(analysisLines, margin, yPos);
-  yPos += analysisLines.length * 5 + 10;
+  // TITRE PRINCIPAL
+  doc.setFontSize(14);
+  doc.setFont(FONTS.accent, 'bold');
+  doc.setTextColor(COLORS.primaryDark);
+  doc.text("GENERAL ANALYSIS & FOCUS AREAS", margin, yPos);
+  yPos += 10; // Espacement réduit après titre
+
+  // Niveau de faiblesse
+  const weaknessLevel = result.weaknessCategories.length > 3 ? 'critical' : 
+                      result.weaknessCategories.length > 1 ? 'significant' : 'some';
+
+  // Création cadre d'analyse (hauteur réduite)
+  doc.setFillColor(COLORS.light);
+  const boxHeight = 60; // Hauteur réduite
+  doc.rect(margin, yPos, contentWidth, boxHeight, 'F');
+  doc.setDrawColor(COLORS.primary);
+  doc.rect(margin, yPos, contentWidth, boxHeight);
+
+  // Préparation texte
+  doc.setFontSize(10);
+  doc.setFont(FONTS.body, 'normal');
+  doc.setTextColor(COLORS.textDark);
+
+  // Construction du texte sur 2 lignes seulement
+  const line1 = `Our data indicates ${result.studentName} requires ${
+    weaknessLevel === 'critical' ? 'critical intervention' : 
+    weaknessLevel === 'significant' ? 'focused support' : 'targeted help'
+  } in ${result.subject}. ${
+    weaknessLevel === 'critical' ? 'The results are dramatically below peer metrics.' :
+    weaknessLevel === 'significant' ? 'The results are below expected standards.' : 
+    'Some areas need improvement.'
+  }`;
+
+  const line2 = `${
+    result.percentageScore < 50 ? 
+    `${result.studentName} does not yet have a solid foundation in ${result.subject.toLowerCase()}.` :
+    `${result.studentName} has some foundational knowledge but with important gaps.`
+  } ${
+    weaknessLevel === 'critical' ? 'An intensive, foundational approach is recommended.' :
+    weaknessLevel === 'significant' ? 'A structured intervention program would be beneficial.' :
+    'Targeted practice in specific areas should help address the gaps.'
+  }`;
+
+  // Affichage compact
+  const lineHeight = 6; // Réduit l'espace entre lignes
+  doc.text(line1, margin + 5, yPos + 8, { maxWidth: contentWidth - 10 });
+  doc.text(line2, margin + 5, yPos + 8 + lineHeight, { maxWidth: contentWidth - 10 });
+
+  // Mise en forme des parties importantes
+  doc.setFont(FONTS.body, 'bold');
+  doc.setTextColor(COLORS.primary);
+  
+  // Surligner le nom et la matière dans la première ligne
+  // const namePos = margin + 5 + doc.getTextWidth('Our data indicates ');
+  // doc.text(result.studentName, namePos, yPos + 8);
+  
+  const subjectPos = doc.getTextWidth(result.studentName) + doc.getTextWidth(' requires targeted help in ');
+  // const subjectPos = namePos + doc.getTextWidth(result.studentName) + doc.getTextWidth(' requires targeted help in ');
+  doc.text(result.subject, subjectPos, yPos + 8);
+
+  yPos += boxHeight + 10; // Espacement réduit après cadre
+
+  // SECTION PRIORITY IMPROVEMENT AREAS (version compacte)
+  if (yPos > pageHeight - margin - 50) {
+    doc.addPage();
+    yPos = margin;
+    addSecondaryHeader(doc, margin, pageWidth, result.studentName, result.subject);
+  }
+
+  doc.setFontSize(12);
+  doc.setFont(FONTS.bold, 'bold');
+  doc.setTextColor(COLORS.warningDark);
+  doc.text("PRIORITY IMPROVEMENT AREAS:", margin, yPos);
+  yPos += 8; // Espacement réduit
+
+  // Analyse erreurs (version compacte)
+  const errorCategories: Record<string, number> = {};
+  result.errorAnalysis.forEach(e => {
+    const question = result.questions.find(q => q.id === e.questionId)!;
+    errorCategories[question.category] = (errorCategories[question.category] || 0) + 1;
+  });
+
+  const sortedCategories = Object.entries(errorCategories)
+    .sort((a, b) => b[1] - a[1])
+    .map(([category]) => category);
+
+  doc.setFont(FONTS.body, 'normal');
+  const catLineHeight = 6; // Espacement réduit entre catégories
+  
+  sortedCategories.forEach(category => {
+    if (yPos > pageHeight - margin - 10) {
+      doc.addPage();
+      yPos = margin;
+      addSecondaryHeader(doc, margin, pageWidth, result.studentName, result.subject);
+      doc.setFontSize(12);
+      doc.text("PRIORITY IMPROVEMENT AREAS:", margin, yPos);
+      yPos += 8;
+    }
+
+    const errorCount = errorCategories[category];
+    const totalInCategory = result.questionResults.filter(q => 
+      result.questions.find(q2 => q2.id === q.id)?.category === category
+    ).length;
+    
+    doc.setTextColor(COLORS.textDark);
+    doc.text(`• ${category}: ${Math.round((errorCount/totalInCategory)*100)}% (${errorCount}/${totalInCategory})`, 
+            margin + 5, yPos);
+    
+    yPos += catLineHeight;
+  });
+
+  yPos += 10; // Espacement final réduit
+}
+
+  // =============================================
+  // DETAILED ERROR ANALYSIS WITH AI INSIGHTS
+  // =============================================
+  // if (result.errorAnalysis?.length > 0 && result.questions) {
+  //   if (yPos > pageHeight - 100) {
+  //     doc.addPage();
+  //     yPos = margin;
+  //     addSecondaryHeader(doc, margin, pageWidth, result.studentName, result.subject);
+  //   }
+
+  //   yPos = drawErrorAnalysis(doc, yPos, margin, contentWidth, result.errorAnalysis, result.questions);
+  // }
+
+  // =============================================
+  // PERSONALIZED ACTION PLAN
+  // =============================================
+  // if (result.weaknessCategories?.length > 0) {
+  //   if (yPos > pageHeight - 100) {
+  //     doc.addPage();
+  //     yPos = margin;
+  //     addSecondaryHeader(doc, margin, pageWidth, result.studentName, result.subject);
+  //   }
+
+  //   yPos = drawActionPlan(doc, yPos, margin, contentWidth, result.weaknessCategories, result.subject);
+  // }
+
+
 
   // Pied de page
-  const footerY = Math.max(280, yPos + 20);
-  const footerLineY = footerY;
-  const footerTextY = footerY + 5;
-  const footerLineHeight = 0.1;
-  const footerTextSpacing = 4;
-
+  const footerY = Math.min(pageHeight - 10, Math.max(yPos + 20, 280));
   doc.setDrawColor(COLORS.light);
-  doc.setLineWidth(footerLineHeight);
-  doc.line(margin, footerLineY, pageWidth - margin, footerLineY);
+  doc.setLineWidth(0.1);
+  doc.line(margin, footerY, pageWidth - margin, footerY);
 
   doc.setFont(FONTS.body, "normal");
   doc.setFontSize(8);
@@ -550,36 +992,21 @@ export async function generateProfessionalPDF(result: ReportOptions): Promise<Bl
   ];
 
   footerTexts.forEach((text, index) => {
-    doc.text(text, pageWidth / 2, footerTextY + (index * footerTextSpacing), { 
-      align: "center" 
-    });
+    doc.text(text, pageWidth / 2, footerY + 5 + (index * 4), { align: "center" });
   });
+
+  // Numéroter les pages
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 10, pageHeight - 10);
+  }
 
   return doc.output("blob");
 }
 
-// Fonction pour ajouter un en-tête minimal sur les pages suivantes
-function addSecondaryHeader(doc: jsPDF, margin: number, pageWidth: number, studentName: string, subject: string) {
-  doc.setFontSize(12);
-  doc.setTextColor(COLORS.dark);
-  doc.text(`Student: ${studentName} - ${subject}`, margin, margin - 10);
-  doc.setDrawColor(COLORS.dark);
-  doc.setLineWidth(0.5);
-  doc.line(margin, margin - 5, pageWidth - margin, margin - 5);
-}
-
-// Fonction utilitaire pour grouper par catégorie
-function groupByCategory(questions: {category: string}[]) {
-  const groups: {category: string, count: number}[] = [];
-  
-  questions.forEach(q => {
-    const existing = groups.find(g => g.category === q.category);
-    if (existing) {
-      existing.count++;
-    } else {
-      groups.push({ category: q.category, count: 1 });
-    }
-  });
-  
-  return groups;
+function arrayBufferToBase64(montserratRegular: ArrayBuffer): string {
+  throw new Error("Function not implemented.");
 }
