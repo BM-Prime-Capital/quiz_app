@@ -889,9 +889,9 @@ if (result.weaknessCategories?.length > 0) {
   // const namePos = margin + 5 + doc.getTextWidth('Our data indicates ');
   // doc.text(result.studentName, namePos, yPos + 8);
   
-  const subjectPos = doc.getTextWidth(result.studentName) + doc.getTextWidth(' requires targeted help in ');
+  // const subjectPos = doc.getTextWidth(result.studentName) + doc.getTextWidth(' requires targeted help in ');
   // const subjectPos = namePos + doc.getTextWidth(result.studentName) + doc.getTextWidth(' requires targeted help in ');
-  doc.text(result.subject, subjectPos, yPos + 8);
+  // doc.text(result.subject, subjectPos, yPos + 8);
 
   yPos += boxHeight + 10; // Espacement réduit après cadre
 
