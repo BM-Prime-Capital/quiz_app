@@ -154,20 +154,6 @@ export async function POST(req: Request) {
       const pdfArrayBuffer = await pdfBuffer.arrayBuffer();
       const pdfBase64 = Buffer.from(pdfArrayBuffer).toString('base64');
       
-      // emailResponse = await sendEmail({
-      //   to: [
-      //     teacherEmail || "barahenock@gmail.com"
-      //   ].filter(Boolean).join(', '),
-      //   subject: `Assessment Results - ${studentName}`,
-      //   text: `Please find attached the assessment results for ${studentName}`,
-      //   html: `<p>Please find attached the assessment results for ${studentName}</p>`,
-      //   attachments: [{
-      //     filename: `results-${studentName}.pdf`,
-      //     content: pdfBase64,
-      //     contentType: 'application/pdf',
-      //     encoding: 'base64'
-      //   }]
-      // });
 
       emailResponse = await sendEmail({
         to: [
